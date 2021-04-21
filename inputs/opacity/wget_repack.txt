@@ -1,0 +1,9 @@
+https://zenodo.org/record/3768504/files/pcubillos/H2O_exomol_pokazatel_0.24-500.0um_100-3500K_threshold_0.01_lbl.dat
+https://zenodo.org/record/3768504/files/pcubillos/HCN_exomol_harris-larner_0.56-500um_100-3500K_threshold_0.01_lbl.dat
+https://zenodo.org/record/3768504/files/pcubillos/NH3_exomol_coyute-byte_0.5-500.0um_100-3500K_threshold_0.03_lbl.dat
+https://zenodo.org/record/3768504/files/pcubillos/C2H2_exomol_acety_1.0-500.0um_100-3500K_threshold_0.03_lbl.dat
+
+http://www.exomol.com/db/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL.pf
+http://www.exomol.com/db/HCN/1H-12C-14N/Harris/1H-12C-14N__Harris.pf
+http://www.exomol.com/db/HCN/1H-13C-14N/Larner/1H-13C-14N__Larner.pf
+http://www.exomol.com/db/C2H2/12C2-1H2/aCeTY/12C2-1H2__aCeTY.pf

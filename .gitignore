@@ -1,3 +1,14 @@
+# Pyrat Bay inputs
+pyratbay/
+*.pf
+*.par
+*.bz2
+*.tli
+*.atm
+*.npz
+*.swp
+*~
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
