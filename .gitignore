@@ -1,4 +1,5 @@
-# Pyrat Bay inputs
+# Local inputs
+ggchem/
 pyratbay/
 *.pf
 *.par

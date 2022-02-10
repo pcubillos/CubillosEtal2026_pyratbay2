@@ -1,9 +1,29 @@
 # Define topdir (in your top working directory) to make your life easier:
 topdir=`pwd`
 
-# Install the necessary code:
+# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+# Setup:
+
+# Install tea:
+pip install tea_chemistry==1.0.0
+
+# Install pyratbay:
 # TBD: Updated to 1.X.0 after adding radeq option
 pip install pyratbay==1.0.0
+
+# Install ggchem:
+git clone https://github.com/pw31/GGchem ggchem
+cd $topdir/ggchem/src16
+cp makefile.prodimo makefile
+make
+cp $topdir/ggchem/data/dispol_WoitkeRefit.dat \
+   $topdir/benchmark_tea_ggchem/data/dispol_WoitkeRefit.dat
+cp $topdir/ggchem/data/dispol_StockKitzmann_withoutTsuji.dat \
+   $topdir/benchmark_tea_ggchem/data/dispol_StockKitzmann_withoutTsuji.dat
+cp $topdir/ggchem/data/dispol_BarklemCollet.dat \
+   $topdir/benchmark_tea_ggchem/data/dispol_BarklemCollet.dat
+cp $topdir/ggchem/data/DustChem.dat \
+   $topdir/benchmark_tea_ggchem/data/DustChem.dat
 
 # Download ExoMol/repack data (H2O, HCN, NH3, C2H2):
 cd $topdir/inputs/opacity
@@ -25,6 +45,15 @@ bzip2 -d 06_HITEMP2020.par.bz2
 #wget http://kurucz.harvard.edu/grids/gridp00odfnew/fp00k2odfnew.pck
 
 
+# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+# Benchmarking:
+
+# Comparison with ggchem for Woitke et al. (2018) network:
+cd $topdir/benchmark_tea_ggchem
+python $topdir/code/benchmark_woitke.py
+python $topdir/code/fig_benchmark_woitke.py
+
+# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Generate partition-function files for Exomol species:
 cd $topdir/run_setup
 pbay -pf exomol ../inputs/opacity/1H2-16O__POKAZATEL.pf

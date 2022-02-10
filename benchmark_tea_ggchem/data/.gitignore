@@ -1,0 +1,5 @@
+# Ignore everything in this directory
+*
+# Except these files
+!.gitignore
+!dispol_benchmark_neutrals.dat
