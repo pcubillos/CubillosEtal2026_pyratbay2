@@ -70,7 +70,7 @@ def run(molecules_lists):
 
     tea.utils.write_tea(
         'vmr_tea_benchmark_woitke.dat',
-        tea_net.species, tea_net.pressure, tea_net.temperature, vmr)
+        tea_net.pressure, tea_net.temperature, tea_net.species, vmr)
 
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

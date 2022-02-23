@@ -5,16 +5,20 @@ topdir=`pwd`
 # Setup:
 
 # Install tea:
-pip install tea_chemistry==1.0.0
+pip install tea_chemistry==0.2.0
 
 # Install pyratbay:
 # TBD: Updated to 1.X.0 after adding radeq option
-pip install pyratbay==1.0.0
+pip install pyratbay==1.1.0
 
 # Install ggchem:
+cd $topdir
 git clone https://github.com/pw31/GGchem ggchem
+cd ggchem
+git checkout 017a60e
 cd $topdir/ggchem/src16
-cp makefile.prodimo makefile
+# This ggchem makefile worked for me, use what works for you:
+cp $topdir/inputs/ggchem_makefile makefile
 make
 cp $topdir/ggchem/data/dispol_WoitkeRefit.dat \
    $topdir/benchmark_tea_ggchem/data/dispol_WoitkeRefit.dat
@@ -25,13 +29,22 @@ cp $topdir/ggchem/data/dispol_BarklemCollet.dat \
 cp $topdir/ggchem/data/DustChem.dat \
    $topdir/benchmark_tea_ggchem/data/DustChem.dat
 
+# Install fastchem:
+cd $topdir
+git clone https://github.com/exoclime/FastChem fastchem
+cd fastchem
+git checkout aa68c20
+make demo2
+
+
 # Download ExoMol/repack data (H2O, HCN, NH3, C2H2):
 cd $topdir/inputs/opacity
 wget -i wget_repack.txt
 
-# Dowload HITEMP data (CO2, CO, CH4):
+# Dowload HITEMP data (CO2, CO, CH4), and HITRAN data (H2O):
 cd $topdir/inputs/opacity
 wget -i wget_hitemp_CO2.txt
+wget -i wget_hitran_H2O.txt
 unzip '*.zip'
 rm -f *.zip
 
@@ -39,6 +52,7 @@ wget https://hitran.org/hitemp/data/bzip2format/05_HITEMP2019.par.bz2
 wget https://hitran.org/hitemp/data/bzip2format/06_HITEMP2020.par.bz2
 bzip2 -d 05_HITEMP2019.par.bz2
 bzip2 -d 06_HITEMP2020.par.bz2
+
 
 # Download Kurucz stellar models:
 #cd $topdir/inputs
@@ -52,6 +66,9 @@ bzip2 -d 06_HITEMP2020.par.bz2
 cd $topdir/benchmark_tea_ggchem
 python $topdir/code/benchmark_woitke.py
 python $topdir/code/fig_benchmark_woitke.py
+
+cd $topdir/benchmark_fastchem
+python $topdir/code/fig_benchmark_fastchem.py
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Generate partition-function files for Exomol species:
