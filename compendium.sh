@@ -20,14 +20,9 @@ cd $topdir/ggchem/src16
 # This ggchem makefile worked for me, use what works for you:
 cp $topdir/inputs/ggchem_makefile makefile
 make
-cp $topdir/ggchem/data/dispol_WoitkeRefit.dat \
-   $topdir/benchmark_tea_ggchem/data/dispol_WoitkeRefit.dat
-cp $topdir/ggchem/data/dispol_StockKitzmann_withoutTsuji.dat \
-   $topdir/benchmark_tea_ggchem/data/dispol_StockKitzmann_withoutTsuji.dat
-cp $topdir/ggchem/data/dispol_BarklemCollet.dat \
-   $topdir/benchmark_tea_ggchem/data/dispol_BarklemCollet.dat
-cp $topdir/ggchem/data/DustChem.dat \
-   $topdir/benchmark_tea_ggchem/data/DustChem.dat
+cp $topdir/ggchem/data/dispol_* $topdir/benchmark_tea_ggchem/data/
+cp $topdir/ggchem/data/DustChem.dat $topdir/benchmark_tea_ggchem/data/
+
 
 # Install fastchem:
 cd $topdir
