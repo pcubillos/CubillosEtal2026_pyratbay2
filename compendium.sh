@@ -4,12 +4,15 @@ topdir=`pwd`
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Setup:
 
-# Install tea:
-pip install tea_chemistry==0.2.0
+# Install pyratbay and friends:
+pip install chemcat==0.3.2
+pip install mc3==3.0.13
 
-# Install pyratbay:
 # TBD: Updated to 1.X.0 after adding radeq option
-pip install pyratbay==1.1.0
+# pip install pyratbay==1.1.3
+git clone -b radeq https://github.com/pcubillos/pyratbay
+cd pyratbay
+pip install -e .
 
 # Install ggchem:
 cd $topdir
@@ -17,12 +20,11 @@ git clone https://github.com/pw31/GGchem ggchem
 cd ggchem
 git checkout 017a60e
 cd $topdir/ggchem/src16
-# This ggchem makefile worked for me, use what works for you:
-cp $topdir/inputs/ggchem_makefile makefile
+# This makefile worked for me, use what works for you:
+cp ../../inputs/ggchem_makefile makefile
 make
-cp $topdir/ggchem/data/dispol_* $topdir/benchmark_tea_ggchem/data/
-cp $topdir/ggchem/data/DustChem.dat $topdir/benchmark_tea_ggchem/data/
-
+cd $topdir
+cp ggchem/data/dispol_* ggchem/data/DustChem.dat benchmark_tea_ggchem/data/
 
 # Install fastchem:
 cd $topdir
@@ -58,12 +60,11 @@ bzip2 -d 06_HITEMP2020.par.bz2
 # Benchmarking:
 
 # Comparison with ggchem for Woitke et al. (2018) network:
-cd $topdir/benchmark_tea_ggchem
-python $topdir/code/benchmark_woitke.py
-python $topdir/code/fig_benchmark_woitke.py
+cd $topdir/benchmark_chemcat_ggchem
+python ../code/fig_benchmark_woitke.py
 
-cd $topdir/benchmark_fastchem
-python $topdir/code/fig_benchmark_fastchem.py
+cd $topdir/benchmark_chemcat_fastchem
+python ../code/fig_benchmark_fastchem.py
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Generate partition-function files for Exomol species:
