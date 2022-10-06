@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-import tea
+import chemcat as cat
+
 
 fc_dict = {
     'H3N': 'NH3',
@@ -14,17 +15,10 @@ fc_dict = {
     'O2Ti': 'TiO2',
     'OV': 'VO',
     'O2V': 'VO2',
+    'OS': 'SO',
+    'O2S': 'SO2',
 }
 
-fc_dict2 = {
-    'NH3': 'H3N',
-    'HCN': 'CHN',
-    'OH':  'HO',
-    'TiO': 'OTi',
-    'TiO2':'O2Ti',
-    'VO':  'OV',
-    'VO2': 'O2V',
-}
 
 def run_fastchem(pressure, temperature, molecules):
     # Generate TP profile:
@@ -46,36 +40,6 @@ def read_fastchem():
     return header, data
 
 
-cols = {
-    'H': 'blue',
-    'H2': 'deepskyblue',
-    'He': 'olive',
-    'H2O': 'navy',
-    'CH4': 'darkorange',
-    'CO': 'limegreen',
-    'CO2': 'red',
-    'NH3': 'magenta',
-    'HCN': '0.5',
-    'N2': 'gold',
-    'C2H2': 'pink',
-    'C2H4': 'deeppink',
-    'OH': 'goldenrod',
-    'C': 'salmon',
-    'N': 'darkviolet',
-    'O': 'greenyellow',
-    'Na': '0.75',
-    'K': 'k',
-    'e': 'forestgreen',
-    'Ti': 'crimson',
-    'V': 'sienna',
-    'TiO': 'c',
-    'TiO2': 'skyblue',
-    'VO': 'aquamarine',
-    'VO2': 'dodgerblue',
-    'Mg': 'brown',
-    'Fe': 'royalblue',
-}
-
 def main():
     # Setup atmosphere:
     nlayers = 101
@@ -85,35 +49,36 @@ def main():
     ions = 'e- H- H+ H2+ He+'.split()
     alkali = 'Na Na- Na+ K K- K+'.split()
     metals = 'Mg Mg+ Fe Fe+'.split()
+    sulfurs = 'S S2 HS H2S SO SO2'.split()
     metal_oxides = 'Ti TiO TiO2 Ti+ TiO+ V VO VO2 V+'.split()
     metal_oxides = 'Ti TiO TiO2 Ti+ V VO VO2 V+'.split()
-    molecules = neutrals + ions + alkali + metals + metal_oxides
+    molecules = neutrals + ions + alkali + metals + metal_oxides + sulfurs
 
     temperatures = [300.0, 1400.0, 3000.0]
     temperature = np.tile(temperatures[0], nlayers)
 
     # Setup network:
-    tea_net = tea.Tea_Network(
+    net = cat.Network(
         pressure, temperature, molecules,
         sources='janaf',
         e_source='asplund_2009',
     )
 
     # Run:
-    species = tea_species = tea_net.species
+    species = chemcat_species = net.species
     ncases = len(temperatures)
-    nspecies = len(tea_species)
-    vmr_tea = np.zeros((ncases, nlayers, nspecies))
+    nspecies = len(chemcat_species)
+    vmr_chemcat = np.zeros((ncases, nlayers, nspecies))
     vmr_fastchem = np.zeros((ncases, nlayers, nspecies))
 
     for i in range(ncases):
         temperature = np.tile(temperatures[i], nlayers)
-        run_fastchem(pressure, temperature, tea_species)
+        run_fastchem(pressure, temperature, chemcat_species)
         fastchem_species, data = read_fastchem()
         fastchem_idx = np.array([
-            fastchem_species.index(mol) for mol in tea_species])
+            fastchem_species.index(mol) for mol in chemcat_species])
         vmr_fastchem[i] = data[fastchem_idx].T
-        vmr_tea[i] = tea_net.thermochemical_equilibrium(temperature)
+        vmr_chemcat[i] = net.thermochemical_equilibrium(temperature)
 
 
     # Plot:
@@ -125,7 +90,7 @@ def main():
         'ion': (1.75, 1.0),
         'cation': (5.0, 1.25),
         'neutral': (),
-        'tea': (),
+        'chemcat': (),
     }
 
     labels = ['ion', 'cation', 'neutral']
@@ -133,6 +98,7 @@ def main():
         Line2D([], [], color='black', lw=lw, dashes=dashes[label], label=label)
         for label in labels
     ]
+    colors = cat.utils.resolve_colors(species)
 
     plt.figure(1, (5.0,6.5))
     plt.clf()
@@ -153,28 +119,42 @@ def main():
                 dash = dashes['neutral']
                 label = species[j]
             plt.loglog(
-                vmr_fastchem[i,:,j], pressure, lw=2.5, color=cols[spec],
-                dashes=dash, label=label)
+                vmr_fastchem[i,:,j], pressure, lw=2.5,
+                color=colors[spec],
+                dashes=dash, label=label,
+            )
             plt.loglog(
-                vmr_tea[i,:,j], pressure, lw=0.5, color='black',
-                dashes=dashes['tea'])
+                vmr_chemcat[i,:,j], pressure, lw=0.5, color='black',
+                dashes=dashes['chemcat'],
+            )
         if i == 0:
             ax.legend(
-                handles=legs, fontsize=fs-2, loc=(1.01, 0.3),
-                handlelength=1.5, handletextpad=0.4, borderpad=0.3)
+                handles=legs,
+                loc=(1.01, 0.74),
+                fontsize=fs-2,
+                handlelength=1.0,
+                handletextpad=0.4,
+                borderpad=0.3,
+            )
         if i == 2:
-            ax.legend(loc=(1.01, 0.0), fontsize=fs-2, handlelength=1.0)
+            ax.legend(
+                loc=(1.01, 0.0),
+                fontsize=fs-2,
+                handlelength=1.0,
+                labelspacing=0.2,
+            )
             ax.set_xlabel("Volume mixing ratio", fontsize=fs)
         else:
             ax.set_xticklabels([])
         ax.text(
             0.03, 0.05, fr'$T={temperatures[i]:.0f}$ K',
             fontsize=fs-1, transform=ax.transAxes,
-            bbox=dict(boxstyle='Round', facecolor='w', alpha=0.75))
+            bbox=dict(boxstyle='Round', facecolor='w', alpha=0.75),
+        )
         ax.set_ylabel("Pressure (bar)", fontsize=fs)
         ax.set_ylim(np.amax(pressure), np.amin(pressure))
         ax.set_xlim(xlim)
-    plt.savefig('../plots/benchmark_tea_fastchem.pdf')
+    plt.savefig('../plots/benchmark_chemcat_fastchem.pdf')
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ topdir=`pwd`
 # Setup:
 
 # Install pyratbay and friends:
-pip install chemcat==0.3.2
+pip install chemcat==0.3.3
 pip install mc3==3.0.13
 
 # TBD: Updated to 1.X.0 after adding radeq option

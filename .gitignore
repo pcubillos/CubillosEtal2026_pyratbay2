@@ -11,12 +11,12 @@ pyratbay/
 *.swp
 *~
 
-benchmark_tea_fastchem/fc_atmosphere.dat
-benchmark_tea_fastchem/fc_chem_output.dat
-benchmark_tea_fastchem/fc_logK.dat
-benchmark_tea_fastchem/fc_monitor_output.dat
-benchmark_tea_ggchem/Static_Conc.dat
-benchmark_tea_ggchem/vmr_tea_benchmark_woitke.dat
+benchmark_chemcat_fastchem/fc_atmosphere.dat
+benchmark_chemcat_fastchem/fc_chem_output.dat
+benchmark_chemcat_fastchem/fc_logK.dat
+benchmark_chemcat_fastchem/fc_monitor_output.dat
+benchmark_chemcat_ggchem/Static_Conc.dat
+benchmark_chemcat_ggchem/vmr_benchmark_chemcat_woitke.dat
 
 
 # Byte-compiled / optimized / DLL files
