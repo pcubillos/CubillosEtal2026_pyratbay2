@@ -86,21 +86,29 @@ pbay -c tli_CO_hitemp_2019.cfg
 pbay -c tli_CH4_hitemp_2020.cfg
 pbay -c tli_C2H2_exomol_acety.cfg
 
+# Make opacity files:
+cd $topdir/run_setup
+sh ../inputs/launch_opacity.sh
+
+# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+# pi Men c
+cd $topdir/inputs
+wget http://kurucz.harvard.edu/grids/gridp00odfnew/fp00k2odfnew.pck
+wget http://kurucz.harvard.edu/grids/gridp02odfnew/fp02k2odfnew.pck
+
 # Make atmospheric files:
 cd $topdir/run_setup
 pbay -c atmosphere_solar_isothermal.cfg
 
-# Make opacity files:
-cd $topdir/run_setup
-pbay -c opacity_H2O_0.3-33.0um.cfg
-pbay -c opacity_HCN_0.3-33.0um.cfg
-pbay -c opacity_NH3_0.3-33.0um.cfg
-pbay -c opacity_CO2_0.3-33.0um.cfg
-pbay -c opacity_CO_0.3-33.0um.cfg
-pbay -c opacity_CH4_0.3-33.0um.cfg
-pbay -c opacity_C2H2_0.3-33.0um.cfg
+cd $topdir/run_pi_men_c
+sh ../inputs/launch_radeq_pi_men_c.sh
+
+# Collect emission spectra into npz file and make plots
+python pi_men_c_model_emission.py
 
 
+# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+# WASP-69b
 
 # Radiative-equilibrium runs:
 cd $topdir/run_radeq_WASP69b
@@ -108,39 +116,4 @@ cd $topdir/run_radeq_WASP69b
 # cd $topdir/run_radeq_WASP69b
 # cd $topdir/run_radeq_WASP80b
 pbay -c radeq_000.1x-solar_CO-0.10.cfg
-pbay -c radeq_000.1x-solar_CO-0.55.cfg
-pbay -c radeq_000.1x-solar_CO-0.90.cfg
-pbay -c radeq_000.1x-solar_CO-0.95.cfg
-pbay -c radeq_000.1x-solar_CO-1.05.cfg
-pbay -c radeq_000.1x-solar_CO-1.50.cfg
-pbay -c radeq_000.1x-solar_CO-2.00.cfg
-pbay -c radeq_000.1x-solar_CO-5.00.cfg
-
-pbay -c radeq_001.0x-solar_CO-0.10.cfg
-pbay -c radeq_001.0x-solar_CO-0.55.cfg
-pbay -c radeq_001.0x-solar_CO-0.90.cfg
-pbay -c radeq_001.0x-solar_CO-0.95.cfg
-pbay -c radeq_001.0x-solar_CO-1.05.cfg
-pbay -c radeq_001.0x-solar_CO-1.50.cfg
-pbay -c radeq_001.0x-solar_CO-2.00.cfg
-pbay -c radeq_001.0x-solar_CO-5.00.cfg
-
-pbay -c radeq_010.0x-solar_CO-0.10.cfg
-pbay -c radeq_010.0x-solar_CO-0.55.cfg
-pbay -c radeq_010.0x-solar_CO-0.90.cfg
-pbay -c radeq_010.0x-solar_CO-0.95.cfg
-pbay -c radeq_010.0x-solar_CO-1.05.cfg
-pbay -c radeq_010.0x-solar_CO-1.50.cfg
-pbay -c radeq_010.0x-solar_CO-2.00.cfg
-pbay -c radeq_010.0x-solar_CO-5.00.cfg
-
-pbay -c radeq_100.0x-solar_CO-0.10.cfg
-pbay -c radeq_100.0x-solar_CO-0.55.cfg
-pbay -c radeq_100.0x-solar_CO-0.90.cfg
-pbay -c radeq_100.0x-solar_CO-0.95.cfg
-pbay -c radeq_100.0x-solar_CO-1.05.cfg
-pbay -c radeq_100.0x-solar_CO-1.50.cfg
-pbay -c radeq_100.0x-solar_CO-2.00.cfg
-pbay -c radeq_100.0x-solar_CO-5.00.cfg
-
 
