@@ -9,7 +9,7 @@ pip install chemcat==0.3.3
 pip install mc3==3.0.13
 
 # TBD: Updated to 1.X.0 after adding radeq option
-# pip install pyratbay==1.1.3
+# pip install pyratbay==2.0.0
 git clone -b radeq https://github.com/pcubillos/pyratbay
 cd pyratbay
 pip install -e .
@@ -37,6 +37,9 @@ make demo2
 # Download ExoMol/repack data (H2O, HCN, NH3, C2H2):
 cd $topdir/inputs/opacity
 wget -i wget_repack.txt
+
+cd $topdir/inputs/opacity
+wget -i wget_exomol_SiO_siouvenir.txt
 
 # Dowload HITEMP data (CO2, CO, CH4), and HITRAN data (H2O):
 cd $topdir/inputs/opacity
@@ -70,10 +73,11 @@ python ../code/fig_benchmark_fastchem.py
 # Generate partition-function files for Exomol species:
 cd $topdir/run_setup
 pbay -pf exomol ../inputs/opacity/1H2-16O__POKAZATEL.pf
+pbay -pf exomol ../inputs/opacity/12C2-1H2__aCeTY.pf
+pbay -pf exomol ../inputs/opacity/28Si-16O__SiOUVenIR.pf
 pbay -pf exomol \
     ../inputs/opacity/1H-12C-14N__Harris.pf \
     ../inputs/opacity/1H-13C-14N__Larner.pf
-pbay -pf exomol ../inputs/opacity/12C2-1H2__aCeTY.pf
 pbay -pf tips NH3 as_exomol
 
 # Make TLI files:
@@ -85,6 +89,9 @@ pbay -c tli_CO2_hitemp_2010.cfg
 pbay -c tli_CO_hitemp_2019.cfg
 pbay -c tli_CH4_hitemp_2020.cfg
 pbay -c tli_C2H2_exomol_acety.cfg
+pbay -c tli_SiO_exomol_siouvenir.cfg
+
+pbay -c tli_CH4_hitemp_2020_extrap.cfg
 
 # Make opacity files:
 cd $topdir/run_setup
@@ -110,8 +117,14 @@ python pi_men_c_model_emission.py
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # WASP-69b
 
-# Radiative-equilibrium runs:
+# Radiative-equilibrium profiles:
 cd $topdir/run_radeq_WASP69b
+sh ../inputs/launch_wasp69b_radeq.sh
+
+# Transmission spectra:
+python make_WASP69b_transmission.py
+
+
 # Then, repeat on run_radeq_WASP107b folder
 # cd $topdir/run_radeq_WASP69b
 # cd $topdir/run_radeq_WASP80b

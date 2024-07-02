@@ -1,0 +1,3 @@
+https://www.exomol.com/db/SiO/28Si-16O/SiOUVenIR/28Si-16O__SiOUVenIR.states.bz2
+https://www.exomol.com/db/SiO/28Si-16O/SiOUVenIR/28Si-16O__SiOUVenIR.trans.bz2
+https://www.exomol.com/db/SiO/28Si-16O/SiOUVenIR/28Si-16O__SiOUVenIR.pf

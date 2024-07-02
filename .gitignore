@@ -17,7 +17,9 @@ benchmark_chemcat_fastchem/fc_logK.dat
 benchmark_chemcat_fastchem/fc_monitor_output.dat
 benchmark_chemcat_ggchem/Static_Conc.dat
 benchmark_chemcat_ggchem/vmr_benchmark_chemcat_woitke.dat
+benchmark_*/*.dat
 
+run_*/*.dat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
