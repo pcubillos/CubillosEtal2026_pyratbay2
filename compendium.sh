@@ -4,11 +4,6 @@ topdir=`pwd`
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Setup:
 
-# Install pyratbay and friends:
-pip install chemcat==0.3.3
-pip install mc3==3.0.13
-
-# TBD: Updated to 1.X.0 after adding radeq option
 # pip install pyratbay==2.0.0
 git clone -b radeq https://github.com/pcubillos/pyratbay
 cd pyratbay
@@ -34,30 +29,51 @@ git checkout aa68c20
 make demo2
 
 
-# Download ExoMol/repack data (H2O, HCN, NH3, C2H2):
-cd $topdir/inputs/opacity
-wget -i wget_repack.txt
+# Download line-list data:
+# Mol   Source  Line-list   Partition
+# -----------------------------------
+# H2O   exomol  pokazatel   exomol
+# TiO   exomol  toto        exomol
+# VO    exomol  hyvo        exomol
+# C2H2  exomol  acety       exomol
+# NH3   exomol  coyute      tips
+# H2S   exomol  ayt2        tips
+# SO2   exomol  exoames     tips
+# CO    HITEMP  Li          tips
+# CO2   ames    ai3000k     states
+# CH4   exomol  mm          states
+# HCN   exomol  harris      states
 
 cd $topdir/inputs/opacity
-wget -i wget_exomol_SiO_siouvenir.txt
-
-# Dowload HITEMP data (CO2, CO, CH4), and HITRAN data (H2O):
-cd $topdir/inputs/opacity
-wget -i wget_hitemp_CO2.txt
-wget -i wget_hitran_H2O.txt
-unzip '*.zip'
-rm -f *.zip
-
-wget https://hitran.org/hitemp/data/bzip2format/05_HITEMP2019.par.bz2
-wget https://hitran.org/hitemp/data/bzip2format/06_HITEMP2020.par.bz2
+wget -i wget_linelists.txt
 bzip2 -d 05_HITEMP2019.par.bz2
-bzip2 -d 06_HITEMP2020.par.bz2
 
+# Generate partition-function files
+cd $topdir/run_opacities
+pbay -pf tips NH3
+pbay -pf tips H2S
+pbay -pf tips SO2
+pbay -pf tips CO
 
-# Download Kurucz stellar models:
-#cd $topdir/inputs
-#wget http://kurucz.harvard.edu/grids/gridp00odfnew/fp00k2odfnew.pck
+pbay -pf exomol ../inputs/opacity/1H2-16O__POKAZATEL.pf
+pbay -pf exomol ../inputs/opacity/12C2-1H2__aCeTY.pf
+pbay -pf exomol ../inputs/opacity/51V-16O__HyVO.pf
+pbay -pf exomol \
+    ../inputs/opacity/46Ti-16O__Toto.pf \
+    ../inputs/opacity/47Ti-16O__Toto.pf \
+    ../inputs/opacity/48Ti-16O__Toto.pf \
+    ../inputs/opacity/49Ti-16O__Toto.pf \
+    ../inputs/opacity/50Ti-16O__Toto.pf
 
+pbay -pf states 5.0 6000.0 5.0 ../inputs/opacity/12C-1H4__MM.states.bz2
+pbay -pf states 5.0 6000.0 5.0 \
+    ../inputs/opacity/1H-12C-14N__Harris.states.bz2 \
+    ../inputs/opacity/1H-13C-14N__Larner.states.bz2
+pbay -pf states 5.0 6000.0 5.0 \
+    exomol/12C-16O2__AI3000K.states.bz2 \
+    exomol/13C-16O2__AI3000K.states.bz2 \
+    exomol/16O-12C-17O__AI3000K.states.bz2 \
+    exomol/16O-12C-18O__AI3000K.states.bz2
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Benchmarking:
@@ -70,15 +86,6 @@ cd $topdir/benchmark_chemcat_fastchem
 python ../code/fig_benchmark_fastchem.py
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Generate partition-function files for Exomol species:
-cd $topdir/run_setup
-pbay -pf exomol ../inputs/opacity/1H2-16O__POKAZATEL.pf
-pbay -pf exomol ../inputs/opacity/12C2-1H2__aCeTY.pf
-pbay -pf exomol ../inputs/opacity/28Si-16O__SiOUVenIR.pf
-pbay -pf exomol \
-    ../inputs/opacity/1H-12C-14N__Harris.pf \
-    ../inputs/opacity/1H-13C-14N__Larner.pf
-pbay -pf tips NH3 as_exomol
 
 # Make TLI files:
 cd $topdir/run_setup
@@ -96,23 +103,6 @@ pbay -c tli_CH4_hitemp_2020_extrap.cfg
 # Make opacity files:
 cd $topdir/run_setup
 sh ../inputs/launch_opacity.sh
-
-# ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# pi Men c
-cd $topdir/inputs
-wget http://kurucz.harvard.edu/grids/gridp00odfnew/fp00k2odfnew.pck
-wget http://kurucz.harvard.edu/grids/gridp02odfnew/fp02k2odfnew.pck
-
-# Make atmospheric files:
-cd $topdir/run_setup
-pbay -c atmosphere_solar_isothermal.cfg
-
-cd $topdir/run_pi_men_c
-sh ../inputs/launch_radeq_pi_men_c.sh
-
-# Collect emission spectra into npz file and make plots
-python pi_men_c_model_emission.py
-
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # WASP-69b

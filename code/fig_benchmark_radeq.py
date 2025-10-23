@@ -10,15 +10,54 @@ import os
 
 import matplotlib.font_manager as font_manager
 
+
 # Add every font at the specified location
 font_dir = ['/home/pcubillos/tmp/fonts']
 for font in font_manager.findSystemFonts(font_dir):
     font_manager.fontManager.addfont(font)
 
-
 # Set font family globally
-rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['Arial']
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
+
+
+def read_vmr_helios(vmr_file):
+    """
+    """
+    fc_dict = {
+        'H3N': 'NH3',
+        'CHN': 'HCN',
+        'HS': 'SH',
+        'HO': 'OH',
+        'HMg': 'MgH',
+        'HMgO': 'MgOH',
+        'H2MgO2': 'Mg(OH)2',
+        'FeH2O2': 'Fe(OH)2',
+        'OTi': 'TiO',
+        'O2Ti': 'TiO2',
+        'OV': 'VO',
+        'O2V': 'VO2',
+        'OS': 'SO', 
+        'O2S': 'SO2',
+        'OSi': 'SiO',
+        'O2Si': 'SiO2',
+    }
+
+    data = np.loadtxt(vmr_file, unpack=True)
+    with open(vmr_file, 'r') as f:
+        header = f.readline()
+    header = [h.strip().replace('1','') for h in header.split('\t')]
+    header = [fc_dict[h] if h in fc_dict else h for h in header]
+
+    h_press = data[0]
+    h_temp = data[1]
+    h_species = header[5:]
+    h_vmr = data[5:,]
+    h_vmr[h_species.index('CHN_')] += h_vmr[h_species.index('CHN_2')]
+    h_species[h_species.index('CHN_')] = 'HCN'
+    h_vmr[h_species.index('CHN_2')] = 1e-100
+
+    return h_press, h_temp, h_species, h_vmr
 
 
 
@@ -26,10 +65,10 @@ def read_helios(folder):
     path, root = os.path.split(folder)
 
     tp_file = f'{folder}/{root}_tp.dat'
-    tp = np.loadtxt(tp_file, unpack=True, skiprows=3, usecols=(0,1,2,3,4))
-    h_temp = tp[1]
-    h_press = tp[2] / pc.bar  # bar
-    h_alt = tp[3] / pc.rjup
+    tp = np.loadtxt(tp_file, unpack=True, skiprows=2, usecols=(1,2,3))
+    h_temp = tp[0]
+    h_press = tp[1] / pc.bar  # bar
+    h_alt = tp[2] / pc.rjup
 
     # Spectral fluxes given in [erg s^-1 cm^-3].
     flux_file = f'{folder}/{root}_TOA_flux_eclipse.dat'
@@ -47,13 +86,14 @@ def read_helios(folder):
 
 
 def read_pyratbay(folder):
+    # CubillosEtal2024_radeq/benchmark_radeq_dace
     files = [
-        'WASP107b_radeq_benchmark_100K_Tirr.atm',
-        'WASP107b_radeq_benchmark_350K_Tirr.atm',
-        'WASP39b_radeq_benchmark_01x_solar_no_heat.atm',
-        'WASP39b_radeq_benchmark_50x_solar_no_heat.atm',
-        'WASP121b_radeq_benchmark_with_TiO_VO_no_heat.atm',
-        'WASP121b_radeq_benchmark_no_TiO_VO_no_heat.atm',
+        'WASP107b_radeq_benchmark_control.atm',
+        'WASP107b_radeq_benchmark_tint_350K.atm',
+        'WASP39b_radeq_benchmark_control_long.atm',
+        'WASP39b_radeq_benchmark_50x.atm',
+        'WASP121b_radeq_benchmark_TiO_VO.atm',
+        'WASP121b_radeq_benchmark_control.atm',
     ]
     nfiles = len(files)
 
@@ -64,6 +104,7 @@ def read_pyratbay(folder):
     for i in range(nfiles):
         afile = files[i]
         if not os.path.exists(f'{folder}/{afile}'):
+            print(f'not found: {repr(afile)}')
             continue
         atm = io.read_atm(f'{folder}/{afile}')
         species = atm[1]
@@ -81,36 +122,34 @@ def read_pyratbay(folder):
 
 
 def read_stars():
-    wn, spec = io.read_spectrum('WASP107b_radeq_benchmark_100K_Tirr.dat')
+    wn, spec = io.read_spectrum('WASP39b_radeq_benchmark_control.dat')
 
     s_files = [
-        '../inputs/phoenix_WASP107b_4400K_m00_logg4.5.dat',
-        '../inputs/phoenix_WASP39b_5500K_m00_logg4.5.dat',
-        '../inputs/phoenix_WASP121b_6400K_m00_logg4.5.dat',
+        '../inputs/helios_phoenix_WASP107b_4400K_m00_logg4.5.dat',
+        '../inputs/helios_phoenix_WASP39b_5500K_m00_logg4.5.dat',
+        '../inputs/helios_phoenix_WASP121b_6400K_m00_logg4.5.dat',
     ]
-
     fluxes = []
     for i in range(len(s_files)):
         starflux, starwn, star_temps = io.read_spectra(s_files[i])
         sinterp = si.interp1d(starwn, starflux)
         fluxes.append(sinterp(wn))
-
     return 1e4/wn, fluxes
 
 
 def main():
-
     h_files = [
-        '../inputs/helios_v01/wasp-107b-f0.667-solar-tint_100',
-        '../inputs/helios_v01/wasp-107b-f0.667-solar-tint_350',
-        '../inputs/helios_v01/wasp-39b-f0.667-solar-no_tio_vo-tint_0',
-        '../inputs/helios_v02/wasp-39b-f0.667-mh_+1.7dex-no_tio_vo-tint_0',
-        '../inputs/helios_v02/wasp-121b-f0.667-solar-tint_0',
-        '../inputs/helios_v02/wasp-121b-f0.667-solar-no_tio_vo-tint_0',
+        '../inputs/helios_v03/wasp-107b-f0.667-solar-no_tio_vo-tint_0',
+        '../inputs/helios_v03/wasp-107b-f0.667-solar-no_tio_vo-tint_350',
+        '../inputs/helios_v03/wasp-39b-f0.667-solar-no_tio_vo-tint_0',
+        '../inputs/helios_v03/wasp-39b-f0.667-mh_+1.7-no_tio_vo-tint_0',
+        '../inputs/helios_v03/wasp-121b-f0.667-solar-tint_0',
+        '../inputs/helios_v03/wasp-121b-f0.667-solar-no_tio_vo-tint_0',
     ]
     nhelios = len(h_files)
 
     h_temps = []
+    h_waves = []
     h_fstar = []
     h_fplanet = []
     h_fpfs = []
@@ -118,6 +157,7 @@ def main():
         data = read_helios(h_files[i])
         h_press = data[0]
         h_temps.append(data[1])
+        h_waves.append(data[3])
         h_fstar.append(data[5])
         h_fplanet.append(data[6])
         h_fpfs.append(data[7])
@@ -126,17 +166,12 @@ def main():
 
 
     labels = [
-        r'$T_{\rm int} = 100$ K',
+        r'$T_{\rm int} =   0$ K',
         r'$T_{\rm int} = 350$ K',
         '1x solar',
         '50x solar',
         'with TiO/VO',
         'no TiO/VO',
-    ]
-    planets_short = [
-        'WASP-107 b',
-        'WASP-39 b',
-        'WASP-121 b',
     ]
     planets = [
         r'WASP-107 b ($T_{\rm eq} = 750 {\rm K}$)',
@@ -150,77 +185,39 @@ def main():
 
     # The stars:
     wl, starfluxes = read_stars()
-    bin_wl = ps.constant_resolution_spectrum(0.15, 33.0, 150)
+    bin_wl = ps.constant_resolution_spectrum(0.15, 30.0, 150.0)
     nbins = len(bin_wl)
-    rs_smaxis = [
-        0.670 * pc.rsun / (0.055 * pc.au),
-        0.940 * pc.rsun / (0.048 * pc.au),
-        1.458 * pc.rsun / (0.026 * pc.au),
-    ]
-    beta_irr = 0.667
-    fstar = [
-        ps.bin_spectrum(bin_wl, wl, starflux * beta_irr * rs_a**2)
-        for starflux, rs_a in zip(starfluxes, rs_smaxis)
-    ]
 
 
     bin_spectra = np.zeros((2*nplanets, nbins))
+    bin_h_spectra = np.zeros((2*nplanets, nbins))
     for i in range(2*nplanets):
         starflux = starfluxes[i//2]
         rprs = (rplanets/rstars)[i//2]
-        bin_spectra[i] = ps.bin_spectrum(bin_wl, wl, spectra[i]/starflux*rprs**2)
+        fpfs = spectra[i]/starflux * rprs**2
+        bin_spectra[i] = ps.bin_spectrum(bin_wl, wl, fpfs)
+        bin_h_spectra[i] = ps.bin_spectrum(bin_wl, h_waves[0], h_fpfs[i])
 
+
+    # The big one
     fs = 11.0
-    lw = 1.5
-    hlw = 1.85
     dashes = (7,1)
-
-
-    sed_cols = [
-        'cornflowerblue',
-        'xkcd:green',
-        'salmon',
-    ]
-
-    # SED at top of atmosphere
-    fig = plt.figure(0)
-    fig.set_size_inches(5.0, 3.75)
-    plt.subplots_adjust(0.15, 0.11, 0.995, 0.99)
-    plt.clf()
-    ax = plt.subplot(111)
-    for i in reversed(range(nplanets)):
-        ax.plot(bin_wl, fstar[i], c=sed_cols[i], label=planets_short[i])
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-    ax.set_xticks([0.3, 1.0, 3.0, 10, 30])
-    ax.set_xlim(0.15, 30.0)
-    ax.set_ylim(1e-2, 4e5)
-    ax.set_ylabel(
-        'SED at top of atmosphere\n(erg s$^{-1}$ cm$^{-2}$ cm)',
-        fontsize=fs, labelpad=0,
-    )
-    ax.set_xlabel('wavelength (um)', fontsize=fs)
-    ax.tick_params(which='both', direction='in', labelsize=fs-1)
-    ax.legend(loc='lower right', fontsize=fs)
-    plt.savefig('../plots/benchmark_radeq_sed.png', dpi=300)
-
     lw = 1.25
     hlw = 1.95
+
     colors = [
-        'mediumblue',
+        'blue',
         'cornflowerblue',
         'limegreen',
         'darkgreen',
-        'darkred',
-        'tomato',
+        'xkcd:red',
+        'salmon',
     ]
 
     temp_ranges = [
-        (450, 3200),
-        (250, 2600),
-        (1500, 4300),
+        (550, 2400),
+        (800, 2350),
+        (2550, 4300),
     ]
     leg_loc = [
         'upper right',
@@ -228,15 +225,15 @@ def main():
         'upper left',
     ]
 
-    depth_max = 4250, 5000, 8750
-    nrows = 4
+    depth_max = 3500, 4300, 8100
+    depth_max = 3300, 4200, 7950
     molecs = {
         'H2O': 'xkcd:blue',
-        'CH4': 'gold',
         'CO': 'xkcd:green',
         'CO2': 'red',
+        'CH4': 'gold',
         'NH3': 'chocolate',
-        'N2': 'darkorange',
+        'Fe': 'darkorange',
         'Na': '0.25',
         'K': '0.65',
         'TiO': 'cornflowerblue',
@@ -246,65 +243,76 @@ def main():
         'H': 'xkcd:pink',
         'e': 'deepskyblue',
     }
-    vmr_range = (1e-10, 2)
+    vmr_range = (1e-12, 2)
+    p_range = 1e2, 1e-8
 
-    dx = 0.25
+    dx0 = 0.17
+    dx1 = 0.3
+    dx2 = 0.308
     x0 = 0.062
     deltax = 0.08
-    x1 = x0+dx+deltax
-    x2 = x1+dx+0.075
-    dy = 0.19
-    y0 = 0.73
-    deltay = 0.32
-    dx2 = 0.27
-    dy2 = 0.12
+    x1 = x0+dx0+deltax
+    x2 = x1+dx1+0.075
 
-    fig = plt.figure(1)
+    dy = 0.22
+    y0 = 0.71
+    y1 = 0.815
+    deltay = 0.32
+    dy2 = 0.125
+
+    fig = plt.figure(2)
+    plt.clf()
     fig.set_size_inches(9.0, 10.0)
     plt.subplots_adjust(0.07, 0.05, 0.99, 0.97, wspace=0.2, hspace=0.44)
-    plt.clf()
     # Temperatures
     for i in range(nplanets):
         j = 2*i
-        ax = plt.axes([x0, y0-i*deltay, dx, dy])
+        ax = plt.axes([x0, y0-i*deltay, dx0, dy])
         ax.plot(temps[j], press, lw=lw, c=colors[j], label=labels[j])
         ax.plot(temps[j+1], press, lw=lw, c=colors[j+1], label=labels[j+1])
         ax.plot(h_temps[j], h_press, lw=hlw, c=colors[j], dashes=dashes)
         ax.plot(h_temps[j+1], h_press, lw=hlw, c=colors[j+1], dashes=dashes)
         ax.set_yscale('log')
         ax.tick_params(which='both', direction='in', top=True, labelsize=fs-1)
-        ax.set_ylim(np.amax(press), np.amin(press))
+        ax.set_ylim(p_range)
+        ax.set_xticks(np.arange(500, 4501, 500))
         ax.set_xlim(temp_ranges[i])
-        ax.set_title(planets[i], fontsize=fs+1, weight='bold')
+        ax.set_title(planets[i], fontsize=fs+1, weight='bold', pad=8)
         ax.legend(loc=leg_loc[i], fontsize=fs-1, handlelength=1.5)
         ax.set_xlabel('temperature (K)', fontsize=fs)
         ax.set_ylabel('pressure (bar)', fontsize=fs)
         if i == 0:
             legend = ax.get_legend()
             code_handles = [
-                Line2D([], [], color='k', lw=1.5, dashes=(), label='Pyrat Bay'),
-                Line2D([], [], color='k', lw=1.5, dashes=(6,2), label='HELIOS'),
+                Line2D([],[], lw=1.5, color='royalblue',label='Pyrat Bay'),
+                Line2D([],[], lw=1.5, color='k', dashes=(6,2), label='HELIOS'),
             ]
-            ax.legend(handles=code_handles, loc=(1.35,1.05))
+            ax.legend(handles=code_handles, loc=(1.5, 1.07))
             ax.add_artist(legend)
     # Spectra
     for i in range(nplanets):
-        ax = plt.axes([x1, y0-i*deltay, dx, dy])
-        ax.plot(bin_wl, bin_spectra[2*i]/pc.ppm, c=colors[2*i])
-        ax.plot(bin_wl, bin_spectra[2*i+1]/pc.ppm, c=colors[2*i+1])
-        ax.set_xscale('log')
-        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-        ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        ax.set_xticks([0.3, 1.0, 3.0, 10])
-        ax.set_ylim(0.0, depth_max[i])
-        ax.set_xlim(0.5, 20.0)
-        ax.tick_params(which='both', top=True, direction='in', labelsize=fs-1)
-        ax.set_xlabel('wavelength (um)', fontsize=fs)
-        ax.set_ylabel(r'$F_{\rm p} / F_{\rm s}$ (ppm)', fontsize=fs)
+        for j in range(2):
+            ax = plt.axes([x1, y1-i*deltay-j*(dy2+0.005), dx1, dy2])
+            ax.plot(bin_wl, bin_h_spectra[2*i+j]/pc.ppm, c='0.05', lw=1.0)
+            ax.plot(bin_wl, bin_spectra[2*i+j]/pc.ppm, c=colors[2*i+j])
+            ax.set_xscale('log')
+            ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+            ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+            ax.set_xticks([0.3, 1.0, 3.0, 10])
+            ax.set_ylim(0.0, depth_max[i])
+            ax.set_xlim(0.5, 15.0)
+            ax.tick_params(which='both', direction='in', right=True, labelsize=fs-1)
+            ax.set_xlabel('wavelength (um)', fontsize=fs)
+            ax.set_ylabel(r'$F_{\rm p} / F_{\rm s}$ (ppm)', fontsize=fs)
+            ax.text(
+                0.03, 0.93, labels[2*i+j],
+                fontsize=fs-1, transform=ax.transAxes, va='top',
+                bbox=dict(boxstyle='Round', facecolor='w', alpha=0.78),
+            )
     # VMRs
     for i in range(nplanets):
         for j in range(2):
-            ax = plt.axes([x2, 0.812-i*deltay-j*(dy2+0.005), dx2, dy2])
+            ax = plt.axes([x2, y1-i*deltay-j*(dy2+0.005), dx2, dy2])
             for mol,col in molecs.items():
                 for ion in ['', '+', '-']:
                     name = mol+ion
@@ -319,11 +327,11 @@ def main():
                     )
             ax.set_yscale('log')
             ax.set_xlim(vmr_range)
-            ax.set_ylim(np.amax(press), np.amin(press))
+            ax.set_ylim(p_range)
             ax.set_yticks(np.logspace(-8,0, 3))
             ax.tick_params(
                 axis='both', which='both', direction='in', labelsize=fs-1,
-                length=6.0, width=1.25,
+                length=5.0, width=1.0,
             )
             ax.text(
                 0.03, 0.93, labels[2*i+j],
@@ -333,10 +341,10 @@ def main():
             ax.set_ylabel('pressure (bar)', fontsize=fs)
             if i == 0 and j == 0:
                 ax.legend(
-                    loc=(-0.4, 1.08), ncols=5, fontsize=fs-1,
+                    loc=(-0.65, 1.10), ncols=7, fontsize=fs-1,
                     labelspacing=0.1,
                     columnspacing=1.0,
-                    handlelength=1.5,
+                    handlelength=1.3,
                 )
             if j == 0:
                 ax.set_xticklabels([])
@@ -344,4 +352,6 @@ def main():
     plt.savefig('../plots/benchmark_radeq_atmospheres.png', dpi=300)
 
 
+if __name__ == '__main__':
+    main()
 

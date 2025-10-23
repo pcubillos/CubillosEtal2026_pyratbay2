@@ -1,0 +1,11 @@
+pbay -c tli_C2H2_exomol_acety.cfg
+pbay -c tli_CH4_exomol_mm.cfg
+pbay -c tli_CO2_ames_ai3000k.cfg
+pbay -c tli_CO_hitemp_2019.cfg
+pbay -c tli_H2O_exomol_pokazatel.cfg
+pbay -c tli_H2S_exomol_ayt2.cfg
+pbay -c tli_HCN_exomol_harris-larner.cfg
+pbay -c tli_NH3_exomol_coyute.cfg
+pbay -c tli_SO2_exomol_exoames.cfg
+pbay -c tli_TiO_exomol_toto.cfg
+pbay -c tli_VO_exomol_hyvo.cfg
