@@ -2,6 +2,8 @@
 fastchem/
 ggchem/
 pyratbay/
+inputs/helios_*
+inputs/synphot_*
 *.pf
 *.par
 *.bz2

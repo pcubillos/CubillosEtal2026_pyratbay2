@@ -86,11 +86,11 @@ def read_helios(folder):
 
 
 def read_pyratbay(folder):
-    # CubillosEtal2024_radeq/benchmark_radeq_dace
+    # CubillosEtal2024_radeq/benchmark_radeq
     files = [
         'WASP107b_radeq_benchmark_control.atm',
         'WASP107b_radeq_benchmark_tint_350K.atm',
-        'WASP39b_radeq_benchmark_control_long.atm',
+        'WASP39b_radeq_benchmark_control.atm',
         'WASP39b_radeq_benchmark_50x.atm',
         'WASP121b_radeq_benchmark_TiO_VO.atm',
         'WASP121b_radeq_benchmark_control.atm',
