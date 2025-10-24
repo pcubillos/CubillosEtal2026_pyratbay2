@@ -3,11 +3,9 @@ topdir=`pwd`
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Setup:
+pip install pyratbay==2.0.0
+pip install gen_tso
 
-# pip install pyratbay==2.0.0
-git clone -b radeq https://github.com/pcubillos/pyratbay
-cd pyratbay
-pip install -e .
 
 # Install ggchem:
 cd $topdir
@@ -44,7 +42,7 @@ make demo2
 # TiO   exomol  toto
 # VO    exomol  hyvo
 
-cd $topdir/inputs/opacity
+cd $topdir/inputs
 wget -i wget_cross_sections.txt
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -64,8 +62,9 @@ python ../code/fig_benchmark_fastchem.py
 cd $topdir/run_radeq_WASP69b
 sh ../inputs/launch_wasp69b_radeq.sh
 
-# Transmission spectra:
+# Forward models
 python make_WASP69b_transmission.py
+python fig_WASP69b_transmission_spectra.py
 
 
 # Then, repeat on run_radeq_WASP107b folder
