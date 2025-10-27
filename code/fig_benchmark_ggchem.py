@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import chemcat as cat
 
 
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
+
+
 def main():
     # The composition (Woitke et al. 2018):
     species_lists = dict(
@@ -174,6 +178,14 @@ def main():
         'crimson', '0.75', 'darkviolet', 'sienna',
         'skyblue', 'aquamarine', 'dodgerblue', '0.4',
     ]
+    cols = [
+        'royalblue', 'deepskyblue', 'mediumseagreen', 'red', 'cyan',
+        'magenta', 'gold', '0.4', 'darkorange', 'slateblue', '0.75',
+        'greenyellow', 'crimson', 'paleturquoise',
+        'blueviolet', 'yellow',
+        'chocolate', 'sandybrown', 'peachpuff',
+    ]
+
 
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -182,7 +194,6 @@ def main():
     for k in range(npanels):
         set_name = molec_sets[k]
         set_molecs = species_lists[set_name]
-
         j = k%9
         if k%9 == 0:
             plt.figure(200+k//9, (8.5,9.0))
@@ -220,7 +231,6 @@ def main():
             plt.savefig(
                 f'../plots/benchmark_chemcat_ggchem_woitke2018_{k//9:02d}.png',
                 dpi=300,
-                facecolor='w',
             )
 
 
@@ -250,27 +260,21 @@ def main():
         'blueviolet', 'yellow',
         'chocolate', 'sandybrown', 'peachpuff',
     ]
-    cols2 = [
-        'chocolate', 'sandybrown', 'peachpuff',
-        'royalblue', 'deepskyblue', 'mediumseagreen', 'red', 'cyan',
-        'magenta', 'gold', '0.4', 'darkorange', 'slateblue', '0.75',
-        'greenyellow', 'crimson', 'paleturquoise',
-        'blueviolet', 'yellow',
-    ]
+    cols2 = ['chocolate', 'sandybrown', 'peachpuff'] + cols
 
-    plt.figure(10, (8.5,5.5))
+    fig = plt.figure(10)
+    fig.set_size_inches(8.5, 5.5)
     plt.clf()
     plt.subplots_adjust(0.07, 0.08, 0.995, 0.96, wspace=0.18, hspace=0.2)
     for k in range(len(panels)):
         ax = plt.subplot(ny, nx, k+1)
-        if k == 5:
-            cols = cols2
         for i,name in enumerate(panels[k]):
+            col = cols2[i] if k == 5 else cols[i]
             if name in ggchem_species:
                 mol_idx = ggchem_species.index(name)
                 plt.loglog(
                     temperature, vmr_gg[:,mol_idx],
-                    label=name, dashes=(), lw=2.5, color=cols[i],
+                    label=name, dashes=(), lw=2.5, color=col,
                 )
             if name in chemcat_species:
                 mol_idx = chemcat_species.index(name)
@@ -287,14 +291,13 @@ def main():
             loc='lower left', fontsize=6.0, framealpha=0.5, labelspacing=0.2,
         )
         if k >= nx:
-            plt.xlabel('Temperature (K)', fontsize=10)
+            plt.xlabel('temperature (K)', fontsize=10)
         ax.set_title(panel_names[k], fontsize=10)
         ax.tick_params(
             which='both', right=True, top=True, direction='in', labelsize=8)
         if k%nx == 0:
-            plt.ylabel('Volume mixing ratio', fontsize=10)
-    plt.savefig('../plots/benchmark_chemcat_ggchem.png', dpi=300, facecolor='w')
-    plt.savefig('../plots/benchmark_chemcat_ggchem.pdf', facecolor='w')
+            plt.ylabel('volume mixing ratio', fontsize=10)
+    plt.savefig('../plots/benchmark_chemcat_ggchem.png', dpi=300)
 
 
 if __name__ == '__main__':
