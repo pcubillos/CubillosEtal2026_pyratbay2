@@ -1,5 +1,4 @@
 import subprocess
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -81,6 +80,7 @@ def main():
         vmr_chemcat[i] = net.thermochemical_equilibrium(temperature)
 
 
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # Plot:
     fs = 10
     xlim = 1e-20, 3.0
@@ -154,7 +154,7 @@ def main():
         ax.set_ylabel("Pressure (bar)", fontsize=fs)
         ax.set_ylim(np.amax(pressure), np.amin(pressure))
         ax.set_xlim(xlim)
-    plt.savefig('../plots/benchmark_chemcat_fastchem.pdf')
+    plt.savefig('../plots/benchmark_chemcat_fastchem.png', dpi=300)
 
 
 if __name__ == '__main__':

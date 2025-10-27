@@ -50,7 +50,7 @@ wget -i wget_cross_sections.txt
 
 # Comparison with ggchem for Woitke et al. (2018) network:
 cd $topdir/benchmark_chemcat_ggchem
-python ../code/fig_benchmark_woitke.py
+python ../code/fig_benchmark_ggchem.py
 
 cd $topdir/benchmark_chemcat_fastchem
 python ../code/fig_benchmark_fastchem.py
@@ -59,16 +59,14 @@ python ../code/fig_benchmark_fastchem.py
 # WASP-69b
 
 # Radiative-equilibrium profiles:
-cd $topdir/run_radeq_WASP69b
+cd $topdir/run_WASP69b
 sh ../inputs/launch_wasp69b_radeq.sh
 
 # Forward models
 python make_WASP69b_transmission.py
 python fig_WASP69b_transmission_spectra.py
 
-
-# Then, repeat on run_radeq_WASP107b folder
-# cd $topdir/run_radeq_WASP69b
-# cd $topdir/run_radeq_WASP80b
-pbay -c radeq_000.1x-solar_CO-0.10.cfg
-
+# Retrievals
+mpirun -n 128 pbay -c ret_WASP69b_transit_jwst_0.59_iso.cfg
+mpirun -n 128 pbay -c ret_WASP69b_transit_jwst_0.59_slant.cfg
+mpirun -n 128 pbay -c ret_WASP69b_transit_jwst_1.10_iso.cfg

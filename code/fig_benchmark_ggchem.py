@@ -83,7 +83,7 @@ def main():
         stdout=subprocess.PIPE,
         universal_newlines=True,
     )
-    screen_output = proc.communicate()
+    proc.communicate()
 
     # Read GGchem output:
     with open('Static_Conc.dat', 'r') as f:
