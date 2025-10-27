@@ -2,8 +2,12 @@
 fastchem/
 ggchem/
 pyratbay/
+run_setup/
+inputs/*.pck
 inputs/helios_*
 inputs/synphot_*
+inputs/launch_*.sh
+run_wasp69b/*
 *.pf
 *.par
 *.bz2

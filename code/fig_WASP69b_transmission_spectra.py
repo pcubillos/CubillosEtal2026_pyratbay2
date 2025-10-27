@@ -60,7 +60,6 @@ def plot():
             i_balance[i] = nlayers-1
     press_rec_059 = gaussf(pressure[i_balance], sigma=3.0)
 
-
     # Bin spectra
     bin_wl = ps.constant_resolution_spectrum(0.6, 12.5, 100.0)
     nbins = len(bin_wl)
@@ -95,6 +94,10 @@ def plot():
     nmol = len(species)
 
     p_ran = 1e2, 3e-8
+    d_ran = [
+        (1.53, 1.76),
+        (1.52, 1.82),
+    ]
     fs = 9.5
     dashes = [
         (),
@@ -155,13 +158,11 @@ def plot():
         else:
             ax.set_xlabel('volume mixing ratio', fontsize=fs)
     # Spectra
-    #plt.clf()
     for i in range(nmodels):
         ax = plt.subplot(2,3,(2+3*i,3+3*i))
         ax.plot(bin_wl, bin_depths[i], c='black', zorder=300)
         for mol,col in colors.items():
             if mol not in molecs:
-
                 continue
             j = list(molecs).index(mol)
             cont = bin_contrib_depths[i,j]
@@ -195,7 +196,7 @@ def plot():
         ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
         ax.set_xticks([0.7, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0])
         ax.set_xlim(0.6, 12.5)
-        ax.set_ylim(1.75, 2.07)
+        ax.set_ylim(d_ran[i])
         ax.tick_params(which='both', right=True, top=True, direction='in')
     plt.savefig(savefile, dpi=300)
 
