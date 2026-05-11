@@ -13,7 +13,7 @@ def main():
     """
     Take radeq profiles and generate transmission spectra.
     """
-    pyrat = pb.Pyrat('WASP69b_transmission.cfg')
+    pyrat = pb.Pyrat('transit_WASP69b.cfg')
     pyrat.log.verb = 0
     pyrat.spec.specfile = None
     wl = pyrat.spec.wl
@@ -22,8 +22,8 @@ def main():
     nlayers, nspecies = np.shape(pyrat.atm.vmr)
 
     radeq_models = [
-        'radeq_WASP69b_3x_0.59_cto.atm',
-        'radeq_WASP69b_3x_1.10_cto.atm',
+        'WASP69b_radeq_3x_0.59_cto_032_beta.atm',
+        'WASP69b_radeq_3x_1.05_cto_032_beta.atm',
     ]
     nmodels = len(radeq_models)
 
@@ -32,6 +32,7 @@ def main():
     for i in range(nmodels):
        atm = io.read_atm(radeq_models[i])
        species = list(atm[1])
+       pressure = atm[2]
        temp.append(atm[3])
        vmr.append(atm[4])
     vmr = np.array(vmr)
@@ -47,7 +48,7 @@ def main():
         quenched_vmr[k,press<p_quench,imol] = vmr_quench
         # SO2/H2S = 0.2
         imol = species.index('SO2')
-        quenched_vmr[k,:,imol] = 1.5e-6
+        quenched_vmr[k,:,imol] = 2.0e-6
 
     spectra = np.zeros((nmodels, nwave))
     for k in range(nmodels):
@@ -63,8 +64,8 @@ def main():
         'H2S',
         'SO2',
         'NH3',
-        'sodium_vdw',
         'potassium_vdw',
+        'sodium_vdw',
     ]
     nmolecs = len(molecs)
 
@@ -85,6 +86,9 @@ def main():
         wl=wl,
         molecs=molecs,
         models=radeq_models,
+        press=press,
+        temp=temp,
+        species=species,
         quenched_vmr=quenched_vmr,
     )
 
@@ -130,10 +134,7 @@ def make_jwst_simulation():
         wl = d['wl']
         models = d['models']
     nmodels = len(models)
-    labels = [
-        '3x_0.59cto',
-        '3x_1.10cto',
-    ]
+    labels = [model[14:25] for model in models]
 
     # Run TSO simulations:
     obs_type = 'transit'
@@ -166,8 +167,8 @@ def make_obs_files():
     ninst = len(insts)
 
     labels = [
-        '3x_0.59cto',
-        '3x_1.10cto',
+        '3x_0.59_cto',
+        '3x_1.05_cto',
     ]
     nmodels = len(labels)
 
@@ -195,9 +196,9 @@ def make_obs_files():
         bin_spectra[i] = ps.bin_spectrum(bin_wl, wl, spectrum) / pc.percent
 
     resolutions = {
-        'niriss': 200,
-        'nirspec': 200,
-        'miri': 100,
+        'niriss': 180,
+        'nirspec': 180,
+        'miri': 80,
     }
 
     # The simulations with inflated noise
@@ -211,7 +212,7 @@ def make_obs_files():
                 continue
             res = resolutions[inst]
             obs_wave, obs_depth, obs_error, half_width = jwst.simulate_tso(
-                tso, resolution=res, noiseless=False, inflation=2.0,
+                tso, resolution=res, noiseless=False, inflation=1.5,
             )
             mask = obs_error < 5*np.median(obs_error)
             if inst == 'miri':
@@ -222,4 +223,14 @@ def make_obs_files():
             obs_errors = np.append(obs_errors, obs_error[mask]/pc.percent)
             obs_inst = np.append(obs_inst, [inst for _ in obs_wave[mask]])
         observations.append((obs_wl, widths, obs_depths, obs_errors, obs_inst))
+
+    # Save to file
+    for j in range(nmodels):
+        obs_wl, widths, obs_depths, obs_errors, inst_labs = observations[j]
+        obs_file = f'../inputs/obs_WASP69b_transit_jwst_{labels[j]}_soss_g395h_lrs.dat'
+        io.write_observations(
+            obs_file, inst_labs,
+            obs_wl, widths, obs_depths, obs_errors,
+            depth_units='percent',
+        )
 
