@@ -1,4 +1,3 @@
-# pip install stsynphot
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,6 +7,15 @@ import pyratbay.io as io
 import os
 from astropy import units as u
 from stsynphot.catalog import grid_to_spec
+import matplotlib.font_manager as font_manager
+
+
+font_dir = ['/home/pcubillos/tmp/fonts']
+for font in font_manager.findSystemFonts(font_dir):
+    font_manager.fontManager.addfont(font)
+# Set font family globally
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial'] + matplotlib.rcParams['font.sans-serif']
 
 
 def remake_from_helios():
@@ -70,12 +78,12 @@ def remake_from_helios():
 
 
 
-def plot_SEDs():
+def plot_sed():
     # System parameters
     planets = [
-        'WASP-121b',
-        'WASP-39b',
-        'WASP-107b',
+        'WASP-121 b',
+        'WASP-39 b',
+        'WASP-107 b',
     ]
     nmodels = len(planets)
 
@@ -92,25 +100,22 @@ def plot_SEDs():
     h_sed = np.zeros((nmodels,nbin))
     s_sed = np.zeros((nmodels,nbin))
     for i in range(nmodels):
-        planet = planets[i].replace('-', '')
+        planet = planets[i].replace('-', '').replace(' ', '')
         filename = f'phoenix_{planet}_{teff[i]:.0f}K_m00_logg4.5.dat'
         wl, flux = io.read_spectrum(f'inputs/helios_{filename}', wn=False)
         h_sed[i] = ps.bin_spectrum(bin_wl, wl, flux) * beta_irr*rs_smaxis[i]**2
-        wl, flux = io.read_spectrum(f'inputs/synphot_{filename}',wn=False)
-        s_sed[i] = ps.bin_spectrum(bin_wl, wl, flux) * beta_irr*rs_smaxis[i]**2
 
 
     # The plot
-    fs = 11
+    fs = 12
     colors = ['salmon', 'xkcd:green', 'royalblue']
     fig = plt.figure(4)
     plt.clf()
     fig.set_size_inches(5.0, 3.15)
-    plt.subplots_adjust(0.15, 0.13, 0.995, 0.995)
+    plt.subplots_adjust(0.15, 0.135, 0.995, 0.995)
     ax = plt.subplot(111)
     for i in range(nmodels):
         planet = planets[i].replace('-', '')
-        #ax.plot(bin_wl, s_sed[i], c='k')
         ax.plot(bin_wl, h_sed[i], c=colors[i], label=planets[i], alpha=0.95)
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -128,30 +133,5 @@ def plot_SEDs():
     ax.tick_params(which='both', direction='in', labelsize=fs-1)
     plt.savefig('plots/benchmark_radeq_sed.png', dpi=300)
 
-
-    # They differ at lambda > 5um
-    colors = ['salmon', 'xkcd:green', 'royalblue']
-    fs = 11
-    fig = plt.figure(3)
-    plt.clf()
-    fig.set_size_inches(6.0, 3.75)
-    plt.subplots_adjust(0.1, 0.11, 0.995, 0.99)
-    ax = plt.subplot(111)
-    ax.axhline(1.0,  dashes=(6,2), color='0.0')
-    ax.axhline(0.85, dashes=(6,2), color='0.5')
-    for i in range(nmodels):
-        planet = planets[i].replace('-', '')
-        ax.plot(bin_wl, s_sed[i]/h_sed[i], c=colors[i], label=planets[i], alpha=0.9)
-    ax.set_xscale('log')
-    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-    ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-    ax.set_xticks([0.3, 1.0, 3.0, 10, 30])  
-    ax.set_xlim(0.15, 30.0)
-    ax.set_ylim(0.4, 1.5)
-    ax.set_ylabel('synphot/helios SED ratio', fontsize=fs)
-    ax.set_xlabel('wavelength (um)', fontsize=fs)
-    ax.legend(loc='upper right', fontsize=fs)
-    ax.tick_params(which='both', direction='in', labelsize=fs-1)
-    plt.savefig('plots/benchmark_radeq_sed_ratios.png', dpi=300)
 
 
