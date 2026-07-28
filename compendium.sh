@@ -55,6 +55,10 @@ python ../code/fig_benchmark_ggchem.py
 cd $topdir/benchmark_chemcat_fastchem
 python ../code/fig_benchmark_fastchem.py
 
+cd $topdir/benchmark_radeq
+python ./make_sed_benchmark.py
+python ./fig_benchmark_radeq.py
+
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # WASP-69b
 

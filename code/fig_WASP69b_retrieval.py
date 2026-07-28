@@ -147,7 +147,7 @@ def main():
     ranges = {
         'H2O':  (-3.6, -1.75),
         'CO':   (-3.9, -1.3),
-        'CO2':  (-5.7, -3.4),
+        'CO2':  (-5.9, -3.4),
         'CH4':  (-5.75, -3.8),
         'K':    (-8.0, -2.),
         'NH3':  (-6.3, -4.20),
@@ -161,7 +161,8 @@ def main():
         fontsize=fs-1, framealpha=0.75, labelspacing=0.25,
         borderpad=0.4, handletextpad=0.5, handlelength=1.25,
     )
-
+    p_bounds = posteriors[3]['p_bounds']
+    p_bounds = 1e-5, 0.02
 
     legs = []
     fig = plt.figure(10)
@@ -169,8 +170,12 @@ def main():
     plt.clf()
     # spectra
     ax = plt.axes([x0, y0, x1-x0, 0.99-y0])
-    bx = plt.axes([0.12, 0.77, 0.22, 0.21])
-    cx = plt.axes([0.44, 0.77, 0.22, 0.21])
+    bx = plt.axes([0.11, 0.715, 0.23, 0.26])
+    cx = plt.axes([0.46, 0.77, 0.22, 0.21])
+    ax.plot([3.15, 1.0], [1.645, 1.74], c='0.85', lw=1, dashes=(5,1))
+    ax.plot([4.0, 2.55], [1.741, 1.88], c='0.85', lw=1, dashes=(5,1))
+    ax.plot([6.8, 4.2], [1.754, 1.769], c='0.85', lw=1, dashes=(5,1))
+    ax.plot([8.6, 10.2], [1.754, 1.769], c='0.85', lw=1, dashes=(5,1))
     for i in range(nruns):
         post_info = posteriors[i]
         bin_depths = post_info['bin_depths']
@@ -198,8 +203,8 @@ def main():
     ax.add_artist(leg1)
     # insets
     ax.plot(
-        [3.15, 3.64, 3.64, 3.15, 3.15],
-        [1.67, 1.67, 1.741, 1.741, 1.67],
+        [3.15, 4.00, 4.00, 3.15, 3.15],
+        [1.645, 1.645, 1.741, 1.741, 1.645],
         c='0.5', lw=1, dashes=(5,1), zorder=-10,
     )
     ax.plot(
@@ -211,13 +216,14 @@ def main():
         obs_wl, obs_depths, obs_errors, fmt='o',
         color='k', mfc='w', ms=3.5, lw=lw, zorder=10, mew=1.0, elinewidth=1.0,
     )
-    bx.set_xticks(np.arange(2.8, 3.7, 0.2))
-    bx.set_yticks(np.arange(1.68, 1.80, 0.03))
-    bx.set_xlim(3.15, 3.64)
-    bx.set_ylim(1.67, 1.744)
+    bx.set_yticks(np.arange(1.62, 1.80, 0.03))
+    bx.set_xlim(3.15, 4.0)
+    bx.set_ylim(1.645, 1.74)
     bx.tick_params(which='both', direction='in', labelsize=fs-2)
-    bx.plot([3.34, 3.39, 3.45], [1.698, 1.714, 1.714], lw=0.75, c='0.5')
-    bx.text(3.39, 1.717, r'$p \approx 2$ mbar', fontsize=fs-1)
+    bx.plot([3.34, 3.43, 3.65], [1.71, 1.724, 1.724], lw=0.75, c='0.5')
+    bx.text(3.43, 1.728, r'$p \approx 0.3$ mbar', fontsize=fs-1.5)
+    bx.plot([3.92, 3.86, 3.68], [1.65, 1.675, 1.675], lw=0.75, c='0.5')
+    bx.text(3.66, 1.679, r'$p \approx 5$ mbar', fontsize=fs-1.5)
 
     cx.errorbar(
         obs_wl, obs_depths, obs_errors, fmt='o',
@@ -228,8 +234,8 @@ def main():
     cx.set_xlim(6.80, 8.6)
     cx.set_ylim(1.685, 1.754)
     cx.tick_params(which='both', direction='in', labelsize=fs-2)
-    cx.plot([7.6, 7.8, 8.02], [1.72, 1.737, 1.737], lw=0.75, c='0.5')
-    cx.text(7.8, 1.741, r'$p \approx 50$ $\mathrm{\mu}$bar', fontsize=fs-1)
+    cx.plot([7.55, 7.78, 8.2], [1.725, 1.737, 1.737], lw=0.75, c='0.5')
+    cx.text(7.8, 1.741, r'$p \approx 0.1$ mbar', fontsize=fs-1)
 
     # Temperature
     ax = plt.axes([0.78, y0+0.05, 0.215, 0.5])
@@ -238,7 +244,6 @@ def main():
     ax.set_xlim(450, 1600)
     for i in range(nruns):
         tp = posteriors[i]['temperature_posterior']
-        p_bounds = posteriors[i]['p_bounds']
         ax.plot(
             tp[0], pressure, color=themes[i].color, lw=1.25,
         )
@@ -294,7 +299,6 @@ def main():
         for ax in axes:
             ax.set_yticks([])
 
-        p_bounds = posteriors[2]['p_bounds']
         for j,ax in enumerate(h_axes[:-1]):
             mol = list(ranges)[j]
             ax.set_xlim(ranges[mol])

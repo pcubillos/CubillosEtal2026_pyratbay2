@@ -59,25 +59,25 @@ def ax_connect(ax1, ax2, fig):
 
 
 def plot():
+    j = 0
     with np.load('WASP69b_transmission_spectra.npz') as d:
-        spectra = d['spectra']
-        contribution_spectra = d['contribution_spectra']
+        spectrum = d['spectra'][j]
+        contribution_spectrum = d['contribution_spectra'][j]
         wl = d['wl']
         molecs = d['molecs']
         models = d['models']
-        quenched_vmr = d['quenched_vmr']
-    nmodels = len(models)
+        quenched_vmr = d['quenched_vmr'][j]
     nmol = len(molecs)
     molecs[list(molecs).index('potassium_vdw')] = 'K'
 
-    atms = [io.read_atm(model) for model in models]
-    species = atms[0][1]
-    pressure = atms[0][2]
-    temps = np.array([atm[3] for atm in atms])
-    vmrs = np.array([atm[4] for atm in atms])
+    atm = io.read_atm(models[j])
+    species, pressure, temp, vmr = atm[1:5]
+
+    # Nudge SO2 to show well in plot
+    quenched_vmr[:,list(species).index('SO2')] = 2.75e-6
 
     ## Calculate equal CH4 -- CO boundary
-    net = cat.Network(pressure, temps[0], species)
+    net = cat.Network(pressure, temp, species)
     ntemps = 101
     nlayers = len(pressure)
     temp_array = np.linspace(400, 1800, ntemps)
@@ -89,12 +89,12 @@ def plot():
     i_balance = np.zeros(ntemps, int)
     for i in range(ntemps):
         t_iso = np.tile(temp_array[i], nlayers)
-        vmr = net.thermochemical_equilibrium(
+        c_vmr = net.thermochemical_equilibrium(
             temperature=t_iso,
             e_ratio={'C_O': c_to_o},
             metallicity=metallicity,
         )
-        methane_to_co = vmr[:,i_CH4] / vmr[:,i_CO]
+        methane_to_co = c_vmr[:,i_CH4] / c_vmr[:,i_CO]
         if np.any(methane_to_co>1):
             i_balance[i] = np.where(methane_to_co>1)[0][0]
         else:
@@ -104,20 +104,17 @@ def plot():
     # Bin spectra
     bin_wl = ps.constant_resolution_spectrum(0.6, 12.5, 100.0)
     nbins = len(bin_wl)
-    bin_depths = np.zeros((nmodels, nbins))
-    for k in range(nmodels):
-        bin_depths[k] = ps.bin_spectrum(bin_wl, wl, spectra[k]) / pc.percent
+    bin_depth = ps.bin_spectrum(bin_wl, wl, spectrum) / pc.percent
 
-    bin_contrib_depths = np.zeros((nmodels, nmol, nbins))
-    for k in range(nmodels):
-        for j in range(nmol):
-            bin_depth = ps.bin_spectrum(bin_wl, wl, contribution_spectra[k,j])
-            bin_contrib_depths[k,j] = bin_depth / pc.percent
+    bin_contrib_depths = np.zeros((nmol, nbins))
+    for j in range(nmol):
+        depth = ps.bin_spectrum(bin_wl, wl, contribution_spectrum[j])
+        bin_contrib_depths[j] = depth / pc.percent
 
 
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # The plot:
+    # The plot
 
     # Species to show
     colors = {
@@ -133,120 +130,99 @@ def plot():
         'HCN': 'green',
     }
     nmol = len(species)
-
     p_ran = 1e2, 3e-8
-    d_ran = [
-        (1.54, 1.77),
-        (1.53, 1.82),
-    ]
-    fs = 9.5
-    dashes = [
-        (),
-        (6,1),
-    ]
-    q_dash = (6,1,2,1)
 
-    c_o_labs = ['C/O = 0.59', 'C/O = 1.05']
-    savefile = '../plots/WASP69b_forward_model_atmosphere_3x_036.png'
+    savefile = '../plots/fig_WASP69b_model_atmosphere_3x_solar_032.png'
+
+    fs = 11.0
+    args = dict(fontsize=fs-1, weight='bold', ha='center')
+    y1 = 0.18
+    y2 = 0.985 - y1
+    y3 = 0.85 - y1
+
+    x0  = 0.054
+    dx0 = 0.122
+    x1  = 0.18
+    dx1 = 0.23
+    x2  = 0.47
+    dx2 = 0.529
 
 
-    fs = 9.75
     fig = plt.figure(1)
     plt.clf()
-    fig.set_size_inches(9.0, 4.5)
-    plt.subplots_adjust(0.05, 0.08, 0.995, 0.985, hspace=0.3, wspace=0.26)
+    fig.set_size_inches(9.0, 2.25)
     # TP
-    ax = plt.subplot(331)
-    for i in range(nmodels):
-        lab = c_o_labs[i]
-        ax.plot(temps[i], pressure, c='k', lw=1.5, dashes=dashes[i], label=lab)
+    ax = plt.axes([x0, y1, dx0, y2])
+    ax.plot(temp, pressure, c='k', lw=1.5)
     ax.plot(temp_array, press_rec_059, c='red', lw=1.25, dashes=(3,1))
-    ax.text(490, 1e-5, 'CO', color='r', fontsize=fs, rotation=-45)
-    ax.text(420, 5e-4, 'CH4', color='r', fontsize=fs, rotation=-45)
+    ax.text(490, 3e-5, 'CO', color='r', fontsize=fs-1.5, rotation=-70)
+    ax.text(395, 5e-4, r'CH$_4$', color='r', fontsize=fs-1.5, rotation=-70)
     ax.set_yscale('log')
     ax.set_yticks(np.logspace(2, -7, 4))
     ax.set_ylim(p_ran)
-    ax.set_xlim(425, 1650)
+    ax.set_xlim(425, 1675)
     ax.tick_params(which='both', direction='in', labelsize=fs-1)
-    ax.set_ylabel('pressure (bar)', fontsize=fs)
+    ax.set_ylabel('pressure (bar)', fontsize=fs, labelpad=0.0)
     ax.set_xlabel('temperature (K)', fontsize=fs)
-    ax.legend(fontsize=fs-1, loc='upper right')
     # VMRs
-    vaxes = []
-    for i in range(nmodels):
-        ax = plt.subplot(3,3,4+3*i)
-        for j,mol in enumerate(species):
-            if mol not in colors:
-                continue
-            col = colors[mol]
-            alpha = 1.0
-            if mol in ['NH3', 'SO2']:
-                alpha = 0.45
-                q_vmr = quenched_vmr[k,:,j]
-                ax.plot(q_vmr, pressure, lw=1.75, c=col, dashes=q_dash)
-            ax.plot(vmrs[i,:,j], pressure, lw=1.75, c=col, alpha=alpha)
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_yticks(np.logspace(2, -7, 4))
-        ax.set_xticks(10.0**np.arange(-3, -25, -3))
-        ax.set_xlim(1e-16, 1e-2)
-        ax.set_ylim(p_ran)
-        h1, = ax.plot(1,1, lw=1.5, c='k', label='equilibrium')
-        h3, = ax.plot(1,1, lw=1.5, c='k', dashes=(5,1,2,1),label='disequilibrium')
-        ax.tick_params(which='both', top=True, direction='in', labelsize=fs-1)
-        ax.set_ylabel('pressure (bar)', fontsize=fs)
-        if i==0:
-            ax.legend(fontsize=fs-1, loc='upper left', labelspacing=0.15, framealpha=0.7)
-            ax_move(ax, dy=-0.02)
-        else:
-            ax.set_xlabel('volume mixing ratio', fontsize=fs)
-        vaxes.append(ax)
+    ax = plt.axes([x1, y1, dx1, y2])
+    for j,mol in enumerate(species):
+        if mol not in colors:
+            continue
+        col = colors[mol]
+        alpha = 1.0
+        if mol in ['NH3', 'SO2']:
+            alpha = 0.45
+            q_vmr = quenched_vmr[:,j]
+            ax.plot(q_vmr, pressure, lw=1.75, c=col, dashes=(6,1))
+        ax.plot(vmr[:,j], pressure, lw=1.75, c=col, alpha=alpha)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xticks(10.0**np.arange(-3, -25, -3))
+    ax.set_yticks(np.logspace(2, -7, 4))
+    ax.set_yticklabels([])
+    ax.set_xlim(2e-16, 0.5e-2)
+    ax.set_ylim(p_ran)
+    h1, = ax.plot(1,1, lw=1.5, c='k', label='equilibrium')
+    h3, = ax.plot(1,1, lw=1.5, c='k', dashes=(4,1), label='disequilibrium')
+    ax.tick_params(which='both', top=True, direction='in', labelsize=fs-1)
+    ax.legend(fontsize=fs-1, loc='upper left', framealpha=0.7)
+    ax.set_xlabel('volume mixing ratio', fontsize=fs)
+    plt.savefig(savefile, dpi=300)
     # Spectra
-    for i in range(nmodels):
-        ax = plt.subplot(2,3,(2+3*i,3+3*i))
-        ax.plot(bin_wl, bin_depths[i], c='black', zorder=300)
-        for mol,col in colors.items():
-            if mol not in molecs:
-                ax.fill_between(
-                    bin_wl, 0.0, 0.1, color=col, label=mol,
-                    fc=to_rgba(col, alpha=0.25),
-                )
-                continue
-            j = list(molecs).index(mol)
-            cont = bin_contrib_depths[i,j]
+    ax = plt.axes([x2, y1, dx2, y3])
+    ax.clear()
+    ax.plot(bin_wl, bin_depth, c='black', lw=1.35, zorder=300)
+    for mol,col in colors.items():
+        if mol not in molecs:
             ax.fill_between(
-                bin_wl, 1.5, cont, color=col, label=mol,
-                fc=to_rgba(col, alpha=0.25),
+                bin_wl, 0.0, 0.1, color=col, label=mol,
+                fc=to_rgba(col, alpha=0.20),
             )
-            ax.plot(bin_wl, cont, color=col, lw=1.15, zorder=150)
-        ax.text(
-            0.01, 0.9, c_o_labs[i], fontsize=fs, weight='bold',
-            transform=ax.transAxes,
+            continue
+        j = list(molecs).index(mol)
+        cont = bin_contrib_depths[j]
+        ax.fill_between(
+            bin_wl, 1.5, cont, color=col, label=mol,
+            fc=to_rgba(col, alpha=0.20),
         )
-        ax.set_xscale('log')
-        ax.set_ylabel('transit depth (%)', fontsize=fs)
-        if i == 0:
-            args = dict(fontsize=fs, weight='bold', ha='center')
-            ax.legend(
-                loc=(0.34,1.02), fontsize=fs-2, ncols=5,
-                labelspacing=0.2, framealpha=0.4,
-            )
-            ax.text(0.81, 1.680, 'K', color=colors['K'], **args)
-            ax.text(1.15, 1.665, 'H2O', color=colors['H2O'], **args)
-            ax.text(3.40, 1.715, 'CH4', color=colors['CH4'], **args)
-            ax.text(3.90, 1.685, 'SO2', color=colors['SO2'], **args)
-            ax.text(4.64, 1.745, 'CO2', color=colors['CO2'], **args)
-            ax.text(4.82, 1.695, 'CO', color=colors['CO'], **args)
-            ax.text(10.8, 1.688, 'NH3', color=colors['NH3'], **args)
-            ax_move(ax, dy=-0.065)
-        else:
-            ax.set_xlabel('wavelength (um)', fontsize=fs)
-        ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
-        ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
-        ax.set_xticks([0.7, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0])
-        ax.set_xlim(0.725, 12.5)
-        ax.set_ylim(d_ran[i])
-        ax.tick_params(which='both', right=True, direction='in', labelsize=fs-1)
-        ax_connect(vaxes[i], ax, fig)
+        ax.plot(bin_wl, cont, color=col, lw=1.0, zorder=150)
+    ax.set_xscale('log')
+    ax.set_ylabel('transit depth (%)', fontsize=fs)
+    ax.legend(loc=(0.0,1.01), fontsize=fs-2.5, ncols=5, labelspacing=0.15, borderpad=0.3)
+    ax.text(0.81, 1.680, 'K', color=colors['K'], **args)
+    ax.text(1.17, 1.665, r'H$\mathbf{_2}$O', color=colors['H2O'], **args)
+    ax.text(3.33, 1.715, r'CH$\mathbf{_4}$', color=colors['CH4'], **args)
+    ax.text(3.87, 1.685, r'SO$\mathbf{_2}$', color=colors['SO2'], **args)
+    ax.text(4.66, 1.742, r'CO$\mathbf{_2}$', color=colors['CO2'], **args)
+    ax.text(4.87, 1.695, 'CO', color=colors['CO'], **args)
+    ax.text(10.7, 1.68, r'NH$\mathbf{_3}$', color=colors['NH3'], **args)
+    ax.set_xlabel(r'wavelength ($\mathrm{\mu}$m)', fontsize=fs)
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.set_xticks([0.7, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0])
+    ax.set_xlim(0.74, 12.0)
+    ax.set_ylim(1.54, 1.76)
+    ax.tick_params(which='both', right=True, direction='in', labelsize=fs-1)
     plt.savefig(savefile, dpi=300)
 
