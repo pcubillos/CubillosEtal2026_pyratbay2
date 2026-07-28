@@ -21,150 +21,83 @@ matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['Arial']
 
 
-def read_vmr_helios(vmr_file):
-    """
-    """
-    fc_dict = {
-        'H3N': 'NH3',
-        'CHN': 'HCN',
-        'HS': 'SH',
-        'HO': 'OH',
-        'HMg': 'MgH',
-        'HMgO': 'MgOH',
-        'H2MgO2': 'Mg(OH)2',
-        'FeH2O2': 'Fe(OH)2',
-        'OTi': 'TiO',
-        'O2Ti': 'TiO2',
-        'OV': 'VO',
-        'O2V': 'VO2',
-        'OS': 'SO',
-        'O2S': 'SO2',
-        'OSi': 'SiO',
-        'O2Si': 'SiO2',
-    }
-
-    data = np.loadtxt(vmr_file, unpack=True)
-    with open(vmr_file, 'r') as f:
-        header = f.readline()
-    header = [h.strip().replace('1','') for h in header.split('\t')]
-    header = [fc_dict[h] if h in fc_dict else h for h in header]
-
-    h_press = data[0]
-    h_temp = data[1]
-    h_species = header[5:]
-    h_vmr = data[5:,]
-    h_vmr[h_species.index('CHN_')] += h_vmr[h_species.index('CHN_2')]
-    h_species[h_species.index('CHN_')] = 'HCN'
-    h_vmr[h_species.index('CHN_2')] = 1e-100
-
-    return h_press, h_temp, h_species, h_vmr
-
-
-
-def read_helios(folder):
-    path, root = os.path.split(folder)
-
-    tp_file = f'{folder}/{root}_tp.dat'
-    tp = np.loadtxt(tp_file, unpack=True, skiprows=2, usecols=(1,2,3))
-    h_temp = tp[0]
-    h_press = tp[1] / pc.bar  # bar
-    h_alt = tp[2] / pc.rjup
-
-    # Spectral fluxes given in [erg s^-1 cm^-3].
-    flux_file = f'{folder}/{root}_TOA_flux_eclipse.dat'
-    data = np.loadtxt(flux_file, unpack=True, skiprows=4)
-    h_wl = data[1]
-    h_dwl = data[3]
-    h_fstar = data[4]    # erg s^-1 cm^-3
-    h_fplanet = data[5]  # erg s^-1 cm^-3
-    h_fpfs = data[6]
-
-    return (
-        h_press, h_temp, h_alt,
-        h_wl, h_dwl, h_fstar, h_fplanet, h_fpfs,
-    )
-
-
-def read_pyratbay(folder):
-    # CubillosEtal2024_radeq/benchmark_radeq
-    files = [
-        'WASP107b_radeq_benchmark_control.atm',
-        'WASP107b_radeq_benchmark_tint_350K.atm',
-        'WASP39b_radeq_benchmark_control.atm',
-        'WASP39b_radeq_benchmark_50x.atm',
-        'WASP121b_radeq_benchmark_TiO_VO.atm',
-        'WASP121b_radeq_benchmark_control.atm',
+def main():
+    # Read helios data
+    h_files = [
+        '../inputs/helios/wasp107b_tint_000K',
+        '../inputs/helios/wasp107b_tint_350K',
+        '../inputs/helios/wasp39b_01x_solar',
+        '../inputs/helios/wasp39b_50x_solar',
+        '../inputs/helios/wasp121b_with_tio',
+        '../inputs/helios/wasp121b_no_tio',
     ]
-    nfiles = len(files)
 
-    pressures = []
+    h_temps = []
+    h_fpfs = []
+    for i,file in enumerate(h_files):
+        h_press, h_temp = np.loadtxt(f'{file}_atm.dat', unpack=True)
+        h_wl, fpfs = np.loadtxt(f'{file}_spectrum.dat', unpack=True)
+        h_temps.append(h_temp)
+        h_fpfs.append(fpfs)
+
+
+    # Read pyratbay data
+    pb_files = [
+        'WASP107b_radeq_benchmark_control',
+        'WASP107b_radeq_benchmark_tint_350K',
+        'WASP39b_radeq_benchmark_control',
+        'WASP39b_radeq_benchmark_50x',
+        'WASP121b_radeq_benchmark_TiO_VO',
+        'WASP121b_radeq_benchmark_control',
+    ]
+
     temps = []
     vmrs = []
-    spectra = []
-    for i in range(nfiles):
-        afile = files[i]
-        if not os.path.exists(f'{folder}/{afile}'):
-            print(f'not found: {repr(afile)}')
-            continue
-        atm = io.read_atm(f'{folder}/{afile}')
-        species = atm[1]
-        press = atm[2]
-        temp = atm[3]
-        vmr = atm[4]
+    fplanet = []
+    for i,file in enumerate(pb_files):
+        u, species, press, temp, vmr, radius = io.read_atm(f'{file}.atm')
         temps.append(temp)
-        pressures.append(press)
         vmrs.append(vmr)
-
-        wl, spec = io.read_spectrum(afile.replace('atm', 'dat'), wn=False)
-        spectra.append(spec)
-
-    return press, temps, vmrs, species, wl, spectra
+        wl, spec = io.read_spectrum(f'{file}.dat', wn=False)
+        fplanet.append(spec)
 
 
-def read_stars():
-    wn, spec = io.read_spectrum('WASP39b_radeq_benchmark_control.dat')
-
+    # Read stellar SEDs
     s_files = [
         '../inputs/helios_phoenix_WASP107b_4400K_m00_logg4.5.dat',
         '../inputs/helios_phoenix_WASP39b_5500K_m00_logg4.5.dat',
         '../inputs/helios_phoenix_WASP121b_6400K_m00_logg4.5.dat',
     ]
-    fluxes = []
-    for i in range(len(s_files)):
-        starflux, starwn, star_temps = io.read_spectra(s_files[i])
-        sinterp = si.interp1d(starwn, starflux)
-        fluxes.append(sinterp(wn))
-    return 1e4/wn, fluxes
+    starfluxes = []
+    for file in s_files:
+        star_wl, flux = io.read_spectrum(file, wn=False)
+        sinterp = si.interp1d(star_wl, flux)
+        starfluxes.append(sinterp(wl))
+
+    # Bin all specta to a common wavelenth
+    bin_wl = ps.constant_resolution_spectrum(0.15, 30.0, 150.0)
+    nbins = len(bin_wl)
+
+    nplanets = len(s_files)
+    bin_spectra = np.zeros((2*nplanets, 2, nbins))
+    rstars = np.array([0.67, 0.94, 1.458]) * pc.rsun
+    rplanets = np.array([0.943, 1.280, 1.753]) * pc.rjup
+    for i in range(2*nplanets):
+        starflux = starfluxes[i//2]
+        rprs = (rplanets/rstars)[i//2]
+        fpfs = fplanet[i]/starflux * rprs**2
+        bin_spectra[i,0] = ps.bin_spectrum(bin_wl, wl, fpfs)
+        bin_spectra[i,1] = ps.bin_spectrum(bin_wl, h_wl, h_fpfs[i])
+
+    # Contribution functions
+    with np.load('contribution_functions_benchmark.npz') as d:
+        cf_data = d['cf']
+        cf_wl = d['wl']
+        cf_press = d['press']
+    median_cf = np.mean(cf_data, axis=2)
 
 
-def main():
-    h_files = [
-        '../inputs/helios_v03/wasp-107b-f0.667-solar-no_tio_vo-tint_0',
-        '../inputs/helios_v03/wasp-107b-f0.667-solar-no_tio_vo-tint_350',
-        '../inputs/helios_v03/wasp-39b-f0.667-solar-no_tio_vo-tint_0',
-        '../inputs/helios_v03/wasp-39b-f0.667-mh_+1.7-no_tio_vo-tint_0',
-        '../inputs/helios_v03/wasp-121b-f0.667-solar-tint_0',
-        '../inputs/helios_v03/wasp-121b-f0.667-solar-no_tio_vo-tint_0',
-    ]
-    nhelios = len(h_files)
-
-    h_temps = []
-    h_waves = []
-    h_fstar = []
-    h_fplanet = []
-    h_fpfs = []
-    for i in range(nhelios):
-        data = read_helios(h_files[i])
-        h_press = data[0]
-        h_temps.append(data[1])
-        h_waves.append(data[3])
-        h_fstar.append(data[5])
-        h_fplanet.append(data[6])
-        h_fpfs.append(data[7])
-
-    press, temps, vmrs, species, wl, spectra = read_pyratbay('.')
-
-
+    # The big one
     labels = [
         r'$T_{\rm int} =   0$ K',
         r'$T_{\rm int} = 350$ K',
@@ -178,35 +111,7 @@ def main():
         r'WASP-39 b ($T_{\rm eq} = 1200 {\rm K}$)',
         r'WASP-121 b ($T_{\rm eq}=2300 {\rm K}$)',
     ]
-    nplanets = len(planets)
 
-    rstars = np.array([0.67, 0.94, 1.458]) * pc.rsun
-    rplanets = np.array([0.943, 1.280, 1.753]) * pc.rjup
-
-    # The stars:
-    wl, starfluxes = read_stars()
-    bin_wl = ps.constant_resolution_spectrum(0.15, 30.0, 150.0)
-    nbins = len(bin_wl)
-
-
-    bin_spectra = np.zeros((2*nplanets, nbins))
-    bin_h_spectra = np.zeros((2*nplanets, nbins))
-    for i in range(2*nplanets):
-        starflux = starfluxes[i//2]
-        rprs = (rplanets/rstars)[i//2]
-        fpfs = spectra[i]/starflux * rprs**2
-        bin_spectra[i] = ps.bin_spectrum(bin_wl, wl, fpfs)
-        bin_h_spectra[i] = ps.bin_spectrum(bin_wl, h_waves[0], h_fpfs[i])
-
-    # Contribution functions
-    with np.load('contribution_functions_benchmark.npz') as d:
-        cf_data = d['cf']
-        cf_wl = d['wl']
-        cf_press = d['press']
-    median_cf = np.mean(cf_data, axis=2)
-
-
-    # The big one
     fs = 11.0
     dashes = (7,1)
     lw = 1.25
@@ -309,8 +214,8 @@ def main():
     for i in range(nplanets):
         for j in range(2):
             ax = plt.axes([x1, y1-i*deltay-j*(dy2+0.005), dx1, dy2])
-            ax.plot(bin_wl, bin_h_spectra[2*i+j]/pc.ppm, c='0.05', lw=1.0)
-            ax.plot(bin_wl, bin_spectra[2*i+j]/pc.ppm, c=colors[2*i+j])
+            ax.plot(bin_wl, bin_spectra[2*i+j,1]/pc.ppm, c='0.05', lw=1.0)
+            ax.plot(bin_wl, bin_spectra[2*i+j,0]/pc.ppm, c=colors[2*i+j])
             ax.set_xscale('log')
             ax.xaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
             ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
