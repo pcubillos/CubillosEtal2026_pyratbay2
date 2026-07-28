@@ -9,4 +9,7 @@ https://zenodo.org/records/16965391/files/cross_section_0.15-33.0um_0200-5000K_R
 https://zenodo.org/records/16965391/files/cross_section_0.15-33.0um_0200-5000K_R025K_CO2_ames_ai3000k.npz
 https://zenodo.org/records/16965391/files/cross_section_0.15-33.0um_0200-5000K_R025K_CH4_exomol_mm.npz
 https://zenodo.org/records/16965391/files/cross_section_0.15-33.0um_0200-5000K_R025K_HCN_exomol_harris_larner.npz
-
+https://zenodo.org/records/21645198/files/cross_section_0.15-33.0um_0200-5000K_R025K_Fe_vald.npz
+https://zenodo.org/records/21645198/files/cross_section_0.15-33.0um_0200-5000K_R025K_K_vald.npz
+https://zenodo.org/records/21645198/files/cross_section_0.15-33.0um_0200-5000K_R025K_Mg_vald.npz
+https://zenodo.org/records/21645198/files/cross_section_0.15-33.0um_0200-5000K_R025K_Na_vald.npz
