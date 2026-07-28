@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 import pyratbay.spectrum as ps
 import pyratbay.constants as pc
 import pyratbay.io as io
-import os
-from astropy import units as u
-from stsynphot.catalog import grid_to_spec
 import matplotlib.font_manager as font_manager
 
 
@@ -18,68 +15,7 @@ matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['Arial'] + matplotlib.rcParams['font.sans-serif']
 
 
-def remake_from_helios():
-    """
-    synphot is equivalent to pysynphot (which I originally used 
-    to create my PHOENIX SEDs)
-    """
-    resolution = 750.0
-    bin_wl = ps.constant_resolution_spectrum(0.1, 50.0, resolution)
-
-    # System parameters
-    planets = [
-        'WASP107b',
-        'WASP39b',
-        'WASP121b',
-    ]
-    Fe_H_star = 0.0
-    log_gstar = 4.5
-    beta_irr = 0.667
-    teff = 4400.0, 5500.0, 6400.0
-    rstar = np.array([0.670, 0.940, 1.458]) * pc.rsun
-    smaxis = np.array([0.055, 0.048, 0.026]) * pc.au
-    rs_smaxis = rstar / smaxis
-
-    # HELIOS models
-    h_files = [
-        'inputs/helios_v03/wasp-107b-f0.667-solar-no_tio_vo-tint_0',
-        'inputs/helios_v03/wasp-39b-f0.667-solar-no_tio_vo-tint_0',
-        'inputs/helios_v03/wasp-121b-f0.667-solar-no_tio_vo-tint_0',
-    ]
-
-    nplanets = len(planets)
-    for i in range(nplanets):
-        h_folder = h_files[i]
-        path, root = os.path.split(h_folder)
-        flux_file = f'{h_folder}/{root}_TOA_flux_eclipse.dat'
-        data = np.loadtxt(flux_file, unpack=True, skiprows=4)
-        h_wl = data[1]
-        # Spectral flux
-        # Convert F_lamda to F_nu (erg s-1 cm-2 cm-1  --> erg s-1 cm-2 cm)
-        # Convert TOA to surface flux
-        h_star = data[4] * (h_wl * pc.um)**2
-        h_star = h_star / beta_irr / rs_smaxis[i]**2
-        h_flux = ps.bin_spectrum(bin_wl, h_wl, h_star)
-
-        planet = planets[i]
-        filename = f'inputs/helios_phoenix_{planet}_{teff[i]:.0f}K_m00_logg4.5.dat'
-        io.write_spectrum(bin_wl, h_flux, filename, 'emission')
-
-    # Synphot models
-    nplanets = len(planets)
-    for i in range(nplanets):
-        planet = planets[i]
-        filename = f'inputs/synphot_phoenix_{planet}_{teff[i]:.0f}K_m00_logg4.5.dat'
-        sp = grid_to_spec('phoenix', teff[i], Fe_H_star, log_gstar)
-        sp_wl = sp.waveset.to('micron').value
-        sp_flux = sp(sp.waveset, flux_unit=u.mJy).value * 1e-26 * pc.c
-        bin_flux = ps.bin_spectrum(bin_wl, sp_wl, sp_flux)
-        io.write_spectrum(bin_wl, bin_flux, filename, 'emission')
-
-
-
-def plot_sed():
-    # System parameters
+def main():
     planets = [
         'WASP-121 b',
         'WASP-39 b',
@@ -98,7 +34,6 @@ def plot_sed():
     rs_smaxis = rstar / smaxis
 
     h_sed = np.zeros((nmodels,nbin))
-    s_sed = np.zeros((nmodels,nbin))
     for i in range(nmodels):
         planet = planets[i].replace('-', '').replace(' ', '')
         filename = f'phoenix_{planet}_{teff[i]:.0f}K_m00_logg4.5.dat'
@@ -134,4 +69,6 @@ def plot_sed():
     plt.savefig('plots/benchmark_radeq_sed.png', dpi=300)
 
 
+if __name__ == '__main__':
+    main()
 
