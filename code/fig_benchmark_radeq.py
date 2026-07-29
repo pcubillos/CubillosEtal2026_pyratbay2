@@ -90,11 +90,11 @@ def main():
         bin_spectra[i,1] = ps.bin_spectrum(bin_wl, h_wl, h_fpfs[i])
 
     # Contribution functions
-    with np.load('contribution_functions_benchmark.npz') as d:
-        cf_data = d['cf']
-        cf_wl = d['wl']
-        cf_press = d['press']
-    median_cf = np.mean(cf_data, axis=2)
+    #with np.load('contribution_functions_benchmark.npz') as d:
+    #    cf_data = d['cf']
+    #    cf_wl = d['wl']
+    #    cf_press = d['press']
+    #median_cf = np.mean(cf_data, axis=2)
 
 
     # The big one
@@ -202,14 +202,14 @@ def main():
             ax.legend(handles=code_handles, loc=(1.5, 1.07))
             ax.add_artist(legend)
         # CF
-        xran = ax.get_xlim()
-        height = 0.075 * (xran[1]-xran[0])
-        ax.axvline(xran[0]+height, lw=0.75, color='0.5', zorder=-10, dashes=(16,2))
-        for k in range(2):
-            cf = median_cf[j+k] / np.amax(median_cf[j+k]) * height
-            cf = xran[0] + cf
-            ax.plot(cf, press, color=colors[j+k], lw=1.75, zorder=10)
-        ax.set_xlim(temp_ranges[i])
+        #xran = ax.get_xlim()
+        #height = 0.075 * (xran[1]-xran[0])
+        #ax.axvline(xran[0]+height, lw=0.75, color='0.5', zorder=-10, dashes=(16,2))
+        #for k in range(2):
+        #    cf = median_cf[j+k] / np.amax(median_cf[j+k]) * height
+        #    cf = xran[0] + cf
+        #    ax.plot(cf, press, color=colors[j+k], lw=1.75, zorder=10)
+        #ax.set_xlim(temp_ranges[i])
     # Spectra
     for i in range(nplanets):
         for j in range(2):
