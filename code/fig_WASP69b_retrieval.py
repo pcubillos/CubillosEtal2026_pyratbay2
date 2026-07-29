@@ -7,27 +7,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import mc3
 
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = (
-    ['Arial'] + matplotlib.rcParams['font.sans-serif']
-)
-
-
-def plot_box(ax, rect, text, lw, fs, bcol, tcol=None):
-    if tcol is None:
-        tcol = bcol
-    box = (
-        [rect[0], rect[0], rect[1], rect[1], rect[0]],
-        [rect[2], rect[3], rect[3], rect[2], rect[2]],
-    )
-    midx = 0.48*(rect[0]+rect[1])
-    midy = 0.5*(rect[2]+rect[3])
-    ax.plot(box[0], box[1], lw=lw, c=bcol)
-    ax.text(
-        midx, midy, text,
-        fontsize=fs, color=tcol, ha='center', va='center',
-    )
-
 
 def get_axes(posterior, ranges):
     pnames = posterior['params_names']
@@ -47,7 +26,6 @@ def get_axes(posterior, ranges):
 def main():
     # Input models
     with np.load('WASP69b_transmission_spectra.npz') as d:
-        models = d['models']
         true_temp = d['temp']
         species = d['species']
         quenched_vmr = d['quenched_vmr'][0]
@@ -136,7 +114,7 @@ def main():
     y2 = 0.2
     xmargin = 0.0075
 
-    fs = 12.0
+    fs = 11.0
     tick_params = {
         'which': 'both',
         'right': True,
@@ -338,3 +316,6 @@ def main():
             )
     plt.savefig(savefile, dpi=300)
 
+
+if __name__ == '__main__':
+    main()

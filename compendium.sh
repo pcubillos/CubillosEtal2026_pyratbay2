@@ -66,7 +66,7 @@ python ../code/fig_benchmark_radeq.py
 # 3. VMR and TLS figures
 
 # 3.1 Figure (5) Non-isobaric VMR profiles vs Moses VMR profiles
-python ./code/fig_non_isobaric_vmr.py
+python code/fig_non_isobaric_vmr.py
 
 # 3.2 Fetch PHOENIX New era SEDs
 cd $topdir
@@ -79,12 +79,12 @@ python code/tls_contamination.py figure
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # 4. WASP-69b retrieval simulation
 
-# 4.0.1 Make sure you installed multinest, pymultinest, and mpi4py
+# 4.0.1 Make sure you installed multinest, pymultinest, MPI, and mpi4py
 # 4.0.2 Download cross-section data (2.1) if you haven't already
 # 4.0.3 See code/make_sed_WASP69b.py for alternaives to generate SEDs
 
-# 4.1 Compute radiative-equilibrium profile
 cd $topdir/run_wasp69b
+# 4.1 Compute radiative-equilibrium profile
 pbay -c radeq_WASP69b_3x_0.59_cto_032_beta.cfg
 
 # 4.2 Computer transmission model
@@ -100,5 +100,6 @@ mpirun -n 128 pbay -c ret_WASP69b_transit_jwst_0.59_iso_snm.cfg
 mpirun -n 128 pbay -c ret_WASP69b_transit_jwst_0.59_slant_nm.cfg
 mpirun -n 128 pbay -c ret_WASP69b_transit_jwst_0.59_slant_snm.cfg
 
-# 4.5 Make figures
+# 4.5 Retrieval output figure
+python ../code/fig_WASP69b_retrieval.py
 
