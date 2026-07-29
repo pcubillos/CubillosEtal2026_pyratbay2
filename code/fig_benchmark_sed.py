@@ -4,15 +4,6 @@ import matplotlib.pyplot as plt
 import pyratbay.spectrum as ps
 import pyratbay.constants as pc
 import pyratbay.io as io
-import matplotlib.font_manager as font_manager
-
-
-font_dir = ['/home/pcubillos/tmp/fonts']
-for font in font_manager.findSystemFonts(font_dir):
-    font_manager.fontManager.addfont(font)
-# Set font family globally
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = ['Arial'] + matplotlib.rcParams['font.sans-serif']
 
 
 def main():
@@ -42,12 +33,12 @@ def main():
 
 
     # The plot
-    fs = 12
+    fs = 11.5
     colors = ['salmon', 'xkcd:green', 'royalblue']
     fig = plt.figure(4)
     plt.clf()
     fig.set_size_inches(5.0, 3.15)
-    plt.subplots_adjust(0.15, 0.135, 0.995, 0.995)
+    plt.subplots_adjust(0.16, 0.135, 0.995, 0.995)
     ax = plt.subplot(111)
     for i in range(nmodels):
         planet = planets[i].replace('-', '')

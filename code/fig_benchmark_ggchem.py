@@ -7,10 +7,6 @@ import matplotlib.pyplot as plt
 import chemcat as cat
 
 
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = ['Arial']
-
-
 def main():
     # The composition (Woitke et al. 2018):
     species_lists = dict(

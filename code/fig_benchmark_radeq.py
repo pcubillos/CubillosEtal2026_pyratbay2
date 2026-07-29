@@ -6,19 +6,6 @@ import scipy.interpolate as si
 import pyratbay.io as io
 import pyratbay.constants as pc
 import pyratbay.spectrum as ps
-import os
-
-import matplotlib.font_manager as font_manager
-
-
-# Add every font at the specified location
-font_dir = ['/home/pcubillos/tmp/fonts']
-for font in font_manager.findSystemFonts(font_dir):
-    font_manager.fontManager.addfont(font)
-
-# Set font family globally
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = ['Arial']
 
 
 def main():
@@ -92,8 +79,6 @@ def main():
     # Contribution functions
     with np.load('contribution_functions_benchmark.npz') as d:
         cf_data = d['cf']
-        cf_wl = d['wl']
-        cf_press = d['press']
     median_cf = np.mean(cf_data, axis=2)
 
 
@@ -112,7 +97,7 @@ def main():
         r'WASP-121 b ($T_{\rm eq}=2300 {\rm K}$)',
     ]
 
-    fs = 11.0
+    fs = 10.5
     dashes = (7,1)
     lw = 1.25
     hlw = 1.95
@@ -161,10 +146,10 @@ def main():
     dx0 = 0.17
     dx1 = 0.3
     dx2 = 0.308
-    x0 = 0.062
+    x0 = 0.064
     deltax = 0.08
-    x1 = x0+dx0+deltax
-    x2 = x1+dx1+0.075
+    x1 = x0 + dx0 + deltax
+    x2 = x1 + dx1 + 0.075
 
     dy = 0.22
     y0 = 0.71

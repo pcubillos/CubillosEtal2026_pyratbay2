@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
 from matplotlib.colors import to_rgba
 from scipy.ndimage import gaussian_filter1d as gaussf
 
@@ -11,14 +10,6 @@ import pyratbay.spectrum as ps
 import chemcat as cat
 
 matplotlib.rcParams['axes.labelpad'] = 1.0
-font_dir = ['/home/pcubillos/tmp/fonts']
-for font in font_manager.findSystemFonts(font_dir):
-    font_manager.fontManager.addfont(font)
-
-# Set font family globally
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = ['Arial'] + matplotlib.rcParams['font.sans-serif']
-
 
 def ax_move(ax, dx=0.0, dy=0.0):
     x0, y0, width, height = ax.get_position().bounds
@@ -133,7 +124,7 @@ def main():
 
     savefile = '../plots/fig_WASP69b_model_atmosphere_3x_solar_032.png'
 
-    fs = 11.0
+    fs = 10.0
     args = dict(fontsize=fs-1, weight='bold', ha='center')
     y1 = 0.18
     y2 = 0.985 - y1

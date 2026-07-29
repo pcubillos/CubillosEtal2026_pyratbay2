@@ -1,16 +1,8 @@
+import sys
 import pyratbay.spectrum as ps
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
-
-
-font_dir = ['/home/pcubillos/tmp/fonts']
-for font in font_manager.findSystemFonts(font_dir):
-    font_manager.fontManager.addfont(font)
-# Set font family globally
-matplotlib.rcParams['font.family'] = 'sans-serif'
-matplotlib.rcParams['font.sans-serif'] = ['Arial'] + matplotlib.rcParams['font.sans-serif']
 
 
 def setup():
@@ -41,11 +33,11 @@ def main():
     epsilon = [tls.epsilon(t_spot, f_spot) for t_spot in t_spots]
 
 
-    fs = 12
+    fs = 11.5
     fig = plt.figure(1)
     fig.set_size_inches(5.5, 3.25)
     plt.clf()
-    plt.subplots_adjust(0.12, 0.14, 0.995, 0.995)
+    plt.subplots_adjust(0.13, 0.14, 0.995, 0.995)
     ax = plt.subplot(111)
     for i,t in enumerate(t_spots):
         col = 'red' if t==teff else plt.cm.viridis(i/(nspots-1))
@@ -60,9 +52,14 @@ def main():
     ax.tick_params(which='both', direction='in', labelsize=fs-1)
     ax.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.set_xticks([0.3, 0.5, 0.7, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0])
-    plt.savefig('../plots/fig_tls_4800K_star_spots.png', dpi=300)
+    plt.savefig('plots/fig_tls_4800K_star_spots.png', dpi=300)
 
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv
+
+    if args[1] == 'fetch':
+        setup()
+    elif args[1] == 'figure':
+        main()
 

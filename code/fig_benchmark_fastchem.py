@@ -20,12 +20,12 @@ fc_dict = {
 
 
 def run_fastchem(pressure, temperature, molecules):
-    # Generate TP profile:
+    # Generate TP profile
     with open('fc_atmosphere.dat', 'w') as f:
         f.write('# temperature in K, pressure in bar\n')
         for p,t in zip(pressure, temperature):
             f.write(f'{t:.6e}    {p:.6e}\n')
-    # Run fastchem:
+    # Run fastchem
     proc = subprocess.Popen('../fastchem/fastchem fc_config.input'.split())
     proc.communicate()
 
@@ -40,7 +40,7 @@ def read_fastchem():
 
 
 def main():
-    # Setup atmosphere:
+    # Setup atmosphere
     nlayers = 101
     pressure = np.logspace(-10, 3, nlayers)
 
@@ -56,14 +56,14 @@ def main():
     temperatures = [300.0, 1400.0, 3000.0]
     temperature = np.tile(temperatures[0], nlayers)
 
-    # Setup network:
+    # Setup network
     net = cat.Network(
         pressure, temperature, molecules,
         sources='janaf',
         e_source='asplund_2009',
     )
 
-    # Run:
+    # Run
     species = chemcat_species = net.species
     ncases = len(temperatures)
     nspecies = len(chemcat_species)
@@ -81,7 +81,7 @@ def main():
 
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # Plot:
+    # Plot
     fs = 10
     xlim = 1e-20, 3.0
     lw = 1.5
