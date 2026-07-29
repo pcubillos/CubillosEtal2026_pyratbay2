@@ -58,7 +58,7 @@ def ax_connect(ax1, ax2, fig):
    fig.patches.append(poly)
 
 
-def plot():
+def main():
     j = 0
     with np.load('WASP69b_transmission_spectra.npz') as d:
         spectrum = d['spectra'][j]
@@ -110,7 +110,6 @@ def plot():
     for j in range(nmol):
         depth = ps.bin_spectrum(bin_wl, wl, contribution_spectrum[j])
         bin_contrib_depths[j] = depth / pc.percent
-
 
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -226,3 +225,6 @@ def plot():
     ax.tick_params(which='both', right=True, direction='in', labelsize=fs-1)
     plt.savefig(savefile, dpi=300)
 
+
+if __name__ == '__main__':
+    main()
